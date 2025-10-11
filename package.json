@@ -1,0 +1,5 @@
+{
+  "dependencies": {
+    "react-native-aes-crypto": "^3.2.1"
+  }
+}
