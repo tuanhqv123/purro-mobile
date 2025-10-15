@@ -4,8 +4,8 @@ import { IS_IOS } from '@/core/native/utils';
 
 // Mock RNScreenshotPrevent for compatibility
 const RNScreenshotPrevent = {
-  togglePreventScreenshot: (prevent: boolean) => {
-    console.log(`Screenshot prevention ${prevent ? 'enabled' : 'disabled'}`);
+  togglePreventScreenshot: (_prevent: boolean) => {
+    // Screenshot prevention toggle
   },
   iosIsBeingCaptured: () => false,
   iosOnScreenCaptureChanged: (
@@ -23,10 +23,6 @@ export function getGlobalScreenCapturable() {
   return globalScreenCapturableRef.current;
 }
 
-/**
- * @description Prevents the user from taking a screenshot,
- * call this hook on top of your App
- */
 export function usePreventScreenshot(prevent = true, { isTop = false } = {}) {
   useEffect(() => {
     if (!isTop) {
@@ -127,9 +123,6 @@ export function useIOSScreenshotted(options?: {
   };
 }
 
-/**
- * @description call this hook only once on the top level of your app
- */
 export function useAppPreventScreenshotOnScreen({}: {
   isTop?: boolean;
 } = {}) {

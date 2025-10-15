@@ -8,11 +8,10 @@ import {
   TouchableOpacity,
   Pressable,
 } from 'react-native';
-import { Colors } from '@/constants/colors';
-import { Typography } from '@/constants/typography';
+import { useTheme, Typography, Spacing, BorderRadius } from '@/theme';
 import { usePreventScreenshot } from '@/hooks/native/security';
 import type { SeedPhraseDisplayScreenProps } from '@/types/navigation';
-const ProgressIndicator = () => (
+const ProgressIndicator = ({ styles }: { styles: any }) => (
   <View style={styles.progressContainer}>
     <View style={styles.progressBar}>
       <View style={[styles.progressStep, styles.progressActive]} />
@@ -23,7 +22,15 @@ const ProgressIndicator = () => (
   </View>
 );
 
-const SeedWordCard = ({ word, index }: { word: string; index: number }) => (
+const SeedWordCard = ({
+  word,
+  index,
+  styles,
+}: {
+  word: string;
+  index: number;
+  styles: any;
+}) => (
   <View style={styles.wordCard}>
     <Text style={styles.wordIndex}>{index}</Text>
     <Text style={styles.wordText}>{word}</Text>
@@ -34,6 +41,8 @@ const SeedPhraseDisplayScreen: React.FC<SeedPhraseDisplayScreenProps> = ({
   route,
   navigation,
 }) => {
+  const { theme } = useTheme();
+  const styles = createStyles(theme);
   const { mnemonic } = route.params;
 
   const [isConfirmed, setIsConfirmed] = useState(false);
@@ -58,17 +67,22 @@ const SeedPhraseDisplayScreen: React.FC<SeedPhraseDisplayScreenProps> = ({
     <SafeAreaView style={styles.container}>
       <StatusBar
         barStyle="light-content"
-        backgroundColor={Colors.background.primary}
+        backgroundColor={theme.background.primary}
       />
 
       <View style={styles.content}>
-        <ProgressIndicator />
+        <ProgressIndicator styles={styles} />
 
         <Text style={styles.title}>Your Seed Phrase</Text>
 
         <View style={styles.wordsGrid}>
           {words.map((word, index) => (
-            <SeedWordCard key={index} word={word} index={index + 1} />
+            <SeedWordCard
+              key={index}
+              word={word}
+              index={index + 1}
+              styles={styles}
+            />
           ))}
         </View>
       </View>
@@ -115,146 +129,144 @@ const SeedPhraseDisplayScreen: React.FC<SeedPhraseDisplayScreenProps> = ({
   );
 };
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: Colors.background.primary,
-  },
-  content: {
-    flex: 1,
-    alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingTop: 20,
-  },
-  progressContainer: {
-    width: 240,
-    marginBottom: 56,
-  },
-  progressBar: {
-    flexDirection: 'row',
-    gap: 4,
-    backgroundColor: 'transparent',
-    borderRadius: 999,
-    height: 3,
-  },
-  progressStep: {
-    flex: 1,
-    height: 3,
-    backgroundColor: '#494F5B',
-    borderRadius: 999,
-  },
-  progressActive: {
-    backgroundColor: Colors.brand.primary,
-  },
-  title: {
-    ...Typography.styles.h4,
-    color: Colors.text.primary,
-    textAlign: 'center',
-    width: 335,
-    marginBottom: 56,
-  },
-  wordsGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 10,
-    width: 362,
-    justifyContent: 'center',
-  },
-  wordCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: 'rgba(37, 39, 44, 0.6)',
-    borderRadius: 10,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    width: 176,
-    minHeight: 48,
-    gap: 14,
-  },
-  wordIndex: {
-    fontSize: 16,
-    lineHeight: 24,
-    color: Colors.text.secondary,
-    width: 24,
-    textAlign: 'left',
-  },
-  wordText: {
-    fontSize: 16,
-    lineHeight: 24,
-    color: Colors.text.primary,
-    flex: 1,
-  },
-  bottomSection: {
-    paddingHorizontal: 20,
-    paddingBottom: 20,
-    gap: 32,
-  },
-  checkboxContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-    paddingVertical: 20,
-  },
-  checkbox: {
-    width: 16,
-    height: 16,
-    borderRadius: 4,
-    borderWidth: 1.25,
-    borderColor: Colors.text.secondary,
-    backgroundColor: 'transparent',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  checkboxChecked: {
-    backgroundColor: Colors.brand.primary,
-    borderColor: Colors.brand.primary,
-  },
-  checkmark: {
-    position: 'absolute',
-    width: 3,
-    height: 7,
-    borderBottomWidth: 2,
-    borderRightWidth: 2,
-    borderColor: Colors.system.white,
-    transform: [{ rotate: '45deg' }],
-    top: 2,
-    left: 5,
-  },
-  checkboxText: {
-    ...Typography.styles.label,
-    color: Colors.text.primary,
-  },
-  warningContainer: {
-    flexDirection: 'row',
-    gap: 8,
-    paddingHorizontal: 20,
-  },
-  warningText: {
-    ...Typography.styles.label,
-    color: Colors.text.primary,
-    flex: 1,
-    lineHeight: 19.6,
-  },
-  continueButton: {
-    backgroundColor: Colors.brand.primary,
-    borderRadius: 12,
-    paddingVertical: 16,
-    paddingHorizontal: 24,
-    alignItems: 'center',
-    justifyContent: 'center',
-    height: 56,
-  },
-  continueButtonDisabled: {
-    backgroundColor: Colors.button.primary.disabled.background,
-  },
-  continueButtonText: {
-    ...Typography.styles.button,
-    color: Colors.text.primary,
-  },
-  continueButtonTextDisabled: {
-    color: Colors.button.primary.disabled.text,
-  },
-});
+const createStyles = (theme: ReturnType<typeof useTheme>['theme']) =>
+  StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: theme.background.primary,
+    },
+    content: {
+      flex: 1,
+      alignItems: 'center',
+      paddingHorizontal: Spacing.lg,
+      paddingTop: Spacing.lg,
+    },
+    progressContainer: {
+      width: 240,
+      marginBottom: 56,
+    },
+    progressBar: {
+      flexDirection: 'row',
+      gap: 4,
+      backgroundColor: 'transparent',
+      borderRadius: BorderRadius.full,
+      height: 3,
+    },
+    progressStep: {
+      flex: 1,
+      height: 3,
+      backgroundColor: theme.neutral.gray[500],
+      borderRadius: BorderRadius.full,
+    },
+    progressActive: {
+      backgroundColor: theme.primary[400],
+    },
+    title: {
+      ...Typography.h4,
+      color: theme.text.primary,
+      textAlign: 'center',
+      width: 335,
+      marginBottom: 56,
+    },
+    wordsGrid: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: Spacing.sm + 2,
+      width: 362,
+      justifyContent: 'center',
+    },
+    wordCard: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      backgroundColor: 'rgba(37, 39, 44, 0.6)',
+      borderRadius: Spacing.sm + 2,
+      paddingHorizontal: Spacing.md,
+      paddingVertical: Spacing.md - 4,
+      width: 176,
+      minHeight: 48,
+      gap: Spacing.md - 2,
+    },
+    wordIndex: {
+      ...Typography.label16,
+      color: theme.text.secondary,
+      width: 24,
+      textAlign: 'left',
+    },
+    wordText: {
+      ...Typography.label16,
+      color: theme.text.primary,
+      flex: 1,
+    },
+    bottomSection: {
+      paddingHorizontal: Spacing.lg,
+      paddingBottom: Spacing.lg,
+      gap: Spacing.xl,
+    },
+    checkboxContainer: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: Spacing.sm,
+      paddingVertical: Spacing.lg,
+    },
+    checkbox: {
+      width: 16,
+      height: 16,
+      borderRadius: BorderRadius.xs,
+      borderWidth: 1.25,
+      borderColor: theme.text.secondary,
+      backgroundColor: 'transparent',
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    checkboxChecked: {
+      backgroundColor: theme.primary[400],
+      borderColor: theme.primary[400],
+    },
+    checkmark: {
+      position: 'absolute',
+      width: 3,
+      height: 7,
+      borderBottomWidth: 2,
+      borderRightWidth: 2,
+      borderColor: theme.neutral.white.base,
+      transform: [{ rotate: '45deg' }],
+      top: 2,
+      left: 5,
+    },
+    checkboxText: {
+      ...Typography.label14,
+      color: theme.text.primary,
+    },
+    warningContainer: {
+      flexDirection: 'row',
+      gap: Spacing.sm,
+      paddingHorizontal: Spacing.lg,
+    },
+    warningText: {
+      ...Typography.label14,
+      color: theme.text.primary,
+      flex: 1,
+    },
+    continueButton: {
+      backgroundColor: theme.primary[400],
+      borderRadius: BorderRadius.md,
+      paddingVertical: Spacing.md,
+      paddingHorizontal: Spacing.lg,
+      alignItems: 'center',
+      justifyContent: 'center',
+      height: 56,
+    },
+    continueButtonDisabled: {
+      backgroundColor: theme.background.secondary,
+    },
+    continueButtonText: {
+      ...Typography.button,
+      color: theme.text.primary,
+    },
+    continueButtonTextDisabled: {
+      color: theme.text.secondary,
+    },
+  });
 
 export default SeedPhraseDisplayScreen;

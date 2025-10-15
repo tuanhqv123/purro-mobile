@@ -11,18 +11,16 @@ import {
   KeyboardAvoidingView,
   Platform,
 } from 'react-native';
-import { Colors } from '@/constants/colors';
-import { Typography } from '@/constants/typography';
-import { useTranslation } from '@/utils/i18n';
+import { useTheme, Typography, Spacing, BorderRadius } from '@/theme';
 import { useProtectedScreen } from '@/hooks/security';
-import { apisWallet, apisLock } from '@/core/apis';
+import { apisWallet } from '@/core/apis';
 import type { CreatePasswordScreenProps } from '@/types/navigation';
 import { FormInput } from '@/components/FormInput';
 import * as bip39 from '@scure/bip39';
 import { HDKey } from '@scure/bip32';
 
 // Progress Indicator Component
-const ProgressIndicator = () => (
+const ProgressIndicator = ({ styles }: { styles: any }) => (
   <View style={styles.progressContainer}>
     <View style={styles.progressBar}>
       <View style={[styles.progressStep, styles.progressActive]} />
@@ -39,7 +37,8 @@ const CreatePasswordScreen: React.FC<CreatePasswordScreenProps> = ({
   route,
   navigation,
 }) => {
-  useTranslation();
+  const { theme } = useTheme();
+  const styles = createStyles(theme);
   const { mnemonic } = route.params;
 
   const [password, setPassword] = useState('');
@@ -54,25 +53,16 @@ const CreatePasswordScreen: React.FC<CreatePasswordScreenProps> = ({
   // Enable screenshot prevention for this screen
   useProtectedScreen('CreateWallet');
 
-  // Pre-warm vault và HD operations ngay khi component mount
+  // Pre-warm HD operations ngay khi component mount
   useEffect(() => {
     const preWarmOperations = async () => {
       try {
-        // Pre-warm vault
-        await apisLock.unlockWallet('');
-      } catch (e) {
-        // Expected to fail, but vault is now warmed up
-      }
-
-      try {
-        // Pre-warm HD operations bằng cách tạo dummy HD key
         const dummyMnemonic =
           'abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about';
         const seed = bip39.mnemonicToSeedSync(dummyMnemonic);
         HDKey.fromMasterSeed(seed);
-        console.log('✅ HD operations pre-warmed');
       } catch (e) {
-        // Ignore errors, just for warming up
+        // Ignore pre-warm errors
       }
     };
 
@@ -85,21 +75,14 @@ const CreatePasswordScreen: React.FC<CreatePasswordScreenProps> = ({
     passwordsMatch && isPasswordValid && confirmPassword.length > 0;
 
   const handleCreateWallet = async () => {
-    if (!canContinue) return;
+    if (!canContinue || isCreating) return;
 
     setIsCreating(true);
 
     try {
-      // Import wallet from mnemonic (this will create and persist wallet)
-      // Vault đã được pre-warmed trong useEffect
-      console.time('🏗️ Total Create Wallet');
       await apisWallet.importWallet(mnemonic, password);
-      console.timeEnd('🏗️ Total Create Wallet');
-
-      // Navigate to success screen
       navigation.navigate('WalletSuccess');
     } catch (error) {
-      console.error('Error creating wallet:', error);
       Alert.alert(
         'Error',
         error instanceof Error && error.message.includes('Native module')
@@ -118,7 +101,7 @@ const CreatePasswordScreen: React.FC<CreatePasswordScreenProps> = ({
     <SafeAreaView style={styles.container}>
       <StatusBar
         barStyle="light-content"
-        backgroundColor={Colors.background.primary}
+        backgroundColor={theme.background.primary}
       />
 
       <KeyboardAvoidingView
@@ -128,7 +111,7 @@ const CreatePasswordScreen: React.FC<CreatePasswordScreenProps> = ({
       >
         <View style={styles.content}>
           {/* Progress Indicator */}
-          <ProgressIndicator />
+          <ProgressIndicator styles={styles} />
 
           {/* Header */}
           <View style={styles.header}>
@@ -201,87 +184,87 @@ const CreatePasswordScreen: React.FC<CreatePasswordScreenProps> = ({
   );
 };
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: Colors.background.primary,
-  },
-  keyboardAvoid: {
-    flex: 1,
-  },
-  content: {
-    flex: 1,
-    alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingTop: 20,
-    justifyContent: 'space-between',
-    paddingBottom: 40,
-  },
-  progressContainer: {
-    width: 240,
-    marginTop: 20,
-  },
-  progressBar: {
-    flexDirection: 'row',
-    gap: 4,
-    backgroundColor: 'transparent',
-    borderRadius: 999,
-    height: 3,
-  },
-  progressStep: {
-    flex: 1,
-    height: 3,
-    backgroundColor: '#494F5B',
-    borderRadius: 999,
-  },
-  progressActive: {
-    backgroundColor: Colors.brand.primary,
-  },
-  header: {
-    alignItems: 'center',
-    gap: 16,
-  },
-  title: {
-    ...Typography.styles.h4,
-    color: Colors.text.primary,
-    width: 335,
-  },
-  subtitle: {
-    ...Typography.styles.button,
-    color: Colors.text.secondary,
-    textAlign: 'center',
-    width: 335,
-  },
-  inputsContainer: {
-    width: '100%',
-    gap: 16,
-  },
-  bottomSection: {
-    paddingHorizontal: 20,
-    paddingBottom: 20,
-  },
-  continueButton: {
-    backgroundColor: Colors.brand.primary,
-    borderRadius: 12,
-    paddingVertical: 16,
-    paddingHorizontal: 24,
-    alignItems: 'center',
-    justifyContent: 'center',
-    minHeight: 48,
-    width: '100%',
-  },
-  continueButtonDisabled: {
-    backgroundColor: Colors.background.secondary,
-  },
-  continueButtonText: {
-    fontSize: 16,
-    fontWeight: '500',
-    color: Colors.text.primary,
-    lineHeight: 20,
-  },
-  continueButtonTextDisabled: {
-    color: Colors.text.secondary,
-  },
-});
+const createStyles = (theme: ReturnType<typeof useTheme>['theme']) =>
+  StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: theme.background.primary,
+    },
+    keyboardAvoid: {
+      flex: 1,
+    },
+    content: {
+      flex: 1,
+      alignItems: 'center',
+      paddingHorizontal: Spacing.lg,
+      paddingTop: Spacing.lg,
+      justifyContent: 'space-between',
+      paddingBottom: Spacing.xxl,
+    },
+    progressContainer: {
+      width: 240,
+      marginTop: Spacing.lg,
+    },
+    progressBar: {
+      flexDirection: 'row',
+      gap: 4,
+      backgroundColor: 'transparent',
+      borderRadius: BorderRadius.full,
+      height: 3,
+    },
+    progressStep: {
+      flex: 1,
+      height: 3,
+      backgroundColor: theme.neutral.gray[500],
+      borderRadius: BorderRadius.full,
+    },
+    progressActive: {
+      backgroundColor: theme.primary[400],
+    },
+    header: {
+      alignItems: 'center',
+      gap: Spacing.md,
+    },
+    title: {
+      ...Typography.h4,
+      color: theme.text.primary,
+      width: 335,
+    },
+    subtitle: {
+      ...Typography.button,
+      color: theme.text.secondary,
+      textAlign: 'center',
+      width: 335,
+    },
+    inputsContainer: {
+      width: '100%',
+      gap: Spacing.md,
+    },
+    bottomSection: {
+      paddingHorizontal: Spacing.lg,
+      paddingBottom: Spacing.lg,
+    },
+    continueButton: {
+      backgroundColor: theme.primary[400],
+      borderRadius: BorderRadius.md,
+      paddingVertical: Spacing.md,
+      paddingHorizontal: Spacing.lg,
+      alignItems: 'center',
+      justifyContent: 'center',
+      minHeight: 48,
+      width: '100%',
+    },
+    continueButtonDisabled: {
+      backgroundColor: theme.background.secondary,
+    },
+    continueButtonText: {
+      ...Typography.label16,
+      fontWeight: '500',
+      color: theme.text.primary,
+    },
+    continueButtonTextDisabled: {
+      color: theme.text.secondary,
+    },
+  });
 
 export default CreatePasswordScreen;

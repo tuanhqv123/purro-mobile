@@ -24,14 +24,7 @@ interface NativeModulesStatic {
   };
   RNHelpers: NativeModule & {
     forceExitApp(): void;
-    /**
-     * @description try to set a file to not be backed up by iCloud
-     * @param filePath
-     */
     iosExcludeFileFromBackup?(filePath: string): Promise<boolean>;
-    // /**
-    //  * @description try to set a directory's files(including files in subdirectories) to not be backed up by iCloud
-    //  */
     // iosExcludeDirectoryFromBackup?(directoryPath: string): Promise<boolean>;
   };
 }

@@ -1,10 +1,5 @@
-/**
- * Services Index
- * Central export point for all core services
- */
-
 export { appEncryptor, Encryptor } from './encryptor';
-export type { EncryptorAdapter } from './encryptor';
+export type { EncryptorAdapter } from '../../types/encryptor';
 
 export { HDKeyring, validateMnemonic, generateMnemonic } from './hdKeyring';
 export type { HDKeyringOptions, HDKeyringData } from './hdKeyring';

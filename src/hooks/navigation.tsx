@@ -1,6 +1,8 @@
 import { useMemo } from 'react';
 import { useNavigationState } from '@react-navigation/native';
 import { atom, useAtom } from 'jotai';
+import type { NavigationProp } from '@react-navigation/native';
+import { RootStackParamList } from '@/types/navigation';
 
 export enum ProtectType {
   SafeTipModal = 'SafeTipModal',
@@ -11,7 +13,7 @@ export enum ProtectType {
 export interface ProtectedConf {
   iosBlurType: ProtectType;
   warningScreenshotBackup: boolean;
-  onOk?: (params: { navigation: any }) => void;
+  onOk?: (params: { navigation: NavigationProp<RootStackParamList> }) => void;
 }
 
 const protectedConfAtom = atom<ProtectedConf>({
@@ -58,9 +60,6 @@ export function useCurrentRouteName() {
   return { currentRouteName };
 }
 
-/**
- * @description call this hook only once on the top level of your app
- */
 export function useAppPreventScreenshotOnScreen({
   isTop = false,
 }: {

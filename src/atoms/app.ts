@@ -1,9 +1,5 @@
 import { atom } from 'jotai';
 
-/**
- * App global state - Rabby Pattern
- * Using Jotai atoms for cross-component state management
- */
 
 // App initialization
 export const appInitialized = atom<boolean>(false);

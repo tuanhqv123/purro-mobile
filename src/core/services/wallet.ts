@@ -1,7 +1,3 @@
-/**
- * Wallet service - Main API for wallet operations
- */
-
 import { Wallet } from 'ethers';
 import { MMKV } from 'react-native-mmkv';
 import * as bip39 from 'bip39';
@@ -74,17 +70,11 @@ const storageWrapper = {
 };
 
 class WalletService {
-  /**
-   * Check if wallet exists
-   */
   hasWallet(): boolean {
     const vault = storageWrapper.getString('vault');
     return !!vault;
   }
 
-  /**
-   * Create new wallet
-   */
   generateMnemonic(): string {
     return bip39.generateMnemonic();
   }
@@ -93,9 +83,6 @@ class WalletService {
     return Wallet.fromMnemonic(mnemonic);
   }
 
-  /**
-   * Legacy method - kept for compatibility, now returns mnemonic only
-   */
   async createWallet(): Promise<{ mnemonic: string }> {
     const mmkvStorage = getStorage();
     if (!mmkvStorage && !memoryStorage.has('_warned')) {
@@ -109,9 +96,6 @@ class WalletService {
     return { mnemonic };
   }
 
-  /**
-   * Import wallet from mnemonic - Boot keyring first
-   */
   async importWallet(mnemonic: string): Promise<{ address: string }> {
     // Boot keyring service with default password first
     if (!keyringService.isBooted()) {
@@ -124,9 +108,6 @@ class WalletService {
     };
   }
 
-  /**
-   * Save wallet with password
-   */
   async saveWallet(password: string): Promise<boolean> {
     try {
       await keyringService.persistAllKeyrings(password);
@@ -137,9 +118,6 @@ class WalletService {
     }
   }
 
-  /**
-   * Get current account
-   */
   getCurrentAccount(): WalletAccount | null {
     const accounts = keyringService.getAccounts();
     if (accounts.length === 0) {
@@ -151,42 +129,27 @@ class WalletService {
     };
   }
 
-  /**
-   * Get all accounts
-   */
   getAllAccounts(): WalletAccount[] {
     const accounts = keyringService.getAccounts();
     return accounts.map(address => ({ address }));
   }
 
-  /**
-   * Get account balance (placeholder - would connect to blockchain)
-   */
   async getAccountBalance(_address: string): Promise<string> {
     // TODO: Implement actual balance fetching from blockchain
     // For now, return a placeholder
     return '0.00';
   }
 
-  /**
-   * Get first account address (for compatibility)
-   */
   getFirstAccount(): string | null {
     const accounts = keyringService.getAllAccounts();
     return accounts.length > 0 ? accounts[0] : null;
   }
 
-  /**
-   * Reset wallet (clear all data)
-   */
   resetWallet(): void {
     keyringService.clearAll();
     storageWrapper.clearAll();
   }
 
-  /**
-   * Export mnemonic (requires wallet to be unlocked)
-   */
   async exportMnemonic(): Promise<string> {
     if (!keyringService.isUnlocked()) {
       throw new Error('Wallet is locked');
@@ -195,9 +158,6 @@ class WalletService {
     return keyringService.exportMnemonic();
   }
 
-  /**
-   * Export private key (requires wallet to be unlocked)
-   */
   async exportPrivateKey(address?: string): Promise<string> {
     if (!keyringService.isUnlocked()) {
       throw new Error('Wallet is locked');

@@ -1,7 +1,3 @@
-/**
- * Event constants for app-wide event broadcasting
- */
-
 export enum BroadcastEvent {
   // Wallet events
   WALLET_CREATED = 'wallet:created',

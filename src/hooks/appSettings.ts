@@ -10,9 +10,8 @@ export function useForceAllowScreenshot() {
 
   return {
     forceAllowScreenshot,
-    setAllowScreenshot: (allow: boolean) => {
-      console.log('Set allow screenshot:', allow);
+    setAllowScreenshot: (_allow: boolean) => {
+      // Set allow screenshot
     },
   };
 }
-

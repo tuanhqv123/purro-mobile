@@ -1,7 +1,3 @@
-/**
- * Session service for managing app session state
- */
-
 import { MMKV } from 'react-native-mmkv';
 import { MMKV_FILE_NAMES } from '../storage';
 

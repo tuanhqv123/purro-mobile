@@ -1,12 +1,3 @@
-/**
- * Time utility functions
- */
-
-/**
- * Format seconds into human readable time
- * @param seconds - Number of seconds
- * @returns Formatted string like "2m 30s" or "1h 5m"
- */
 export function formatTimeReadable(seconds: number): string {
   if (seconds < 60) {
     return `${seconds}s`;
@@ -31,23 +22,14 @@ export function formatTimeReadable(seconds: number): string {
   return `${hours}h ${remainingMinutes}m`;
 }
 
-/**
- * Format timestamp to date string
- */
 export function formatDate(timestamp: number): string {
   return new Date(timestamp).toLocaleDateString();
 }
 
-/**
- * Format timestamp to time string
- */
 export function formatTime(timestamp: number): string {
   return new Date(timestamp).toLocaleTimeString();
 }
 
-/**
- * Get current timestamp in milliseconds
- */
 export function now(): number {
   return Date.now();
 }

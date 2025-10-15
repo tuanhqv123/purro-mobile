@@ -1,8 +1,3 @@
-/**
- * Color constants for Purro Wallet
- * Based on Figma: https://www.figma.com/design/BCzVadeqWIMNWBnCpiW1sD/Purro-Wallet-UI
- */
-
 export const Colors = {
   // Background colors
   background: {

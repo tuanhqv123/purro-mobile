@@ -1,6 +1,3 @@
-/**
- * Preference service for storing user preferences
- */
 
 import { MMKV } from 'react-native-mmkv';
 import { MMKV_FILE_NAMES } from '../storage';

@@ -5,7 +5,9 @@
 // Polyfill for crypto.getRandomValues (MUST be first)
 import 'react-native-get-random-values';
 
-// Polyfill for Buffer (required by ethers.js and crypto libraries)
+// Import gesture handler (MUST be before any component that uses gestures)
+import 'react-native-gesture-handler';
+
 import { Buffer } from 'buffer';
 global.Buffer = Buffer;
 

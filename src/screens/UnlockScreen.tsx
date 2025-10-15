@@ -10,16 +10,15 @@ import {
   Platform,
   ActivityIndicator,
 } from 'react-native';
-import { Colors } from '@/constants/colors';
-import { Typography } from '@/constants/typography';
+import { useTheme, Typography, Spacing, BorderRadius } from '@/theme';
 import { FormInput } from '@/components/FormInput';
-import { useTranslation } from '@/utils/i18n';
 import { apisLock, apisKeychain } from '@/core/apis';
 import { useBiometrics } from '@/hooks/biometrics';
 import type { UnlockScreenProps } from '@/types/navigation';
 
 const UnlockScreen: React.FC<UnlockScreenProps> = ({ navigation }) => {
-  useTranslation();
+  const { theme } = useTheme();
+  const styles = createStyles(theme);
   const [password, setPassword] = useState('');
   const [isUnlocking, setIsUnlocking] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
@@ -36,49 +35,30 @@ const UnlockScreen: React.FC<UnlockScreenProps> = ({ navigation }) => {
         // Wait a bit for UI to settle
         await new Promise(resolve => setTimeout(resolve, 500));
 
-        // Pre-warm vault by attempting decrypt with dummy password
-        // This will "heat up" the vault data in memory for faster subsequent access
-        console.log('🔥 Pre-warming vault...');
-        console.time('🔥 Vault Pre-warm');
-        try {
-          await apisLock.unlockWallet('');
-        } catch (e) {
-          // Expected to fail, but vault is now warmed up
-          console.log('✅ Vault pre-warmed (expected failure)');
-        }
-        console.timeEnd('🔥 Vault Pre-warm');
-
         if (
           computed.isBiometricsEnabled &&
           !isUnlocking &&
           !biometricAttempted
         ) {
-          console.log('🔐 Attempting biometric unlock...');
           setIsUnlocking(true);
           setErrorMessage('');
 
           try {
             const passwordFromKeychain =
               await apisKeychain.requestGenericPassword();
-            console.log(
-              '🔐 Got password from keychain:',
-              !!passwordFromKeychain,
-            );
 
             if (passwordFromKeychain) {
-              // Face ID successful = wallet unlocked!
-              // No need to verify password since Face ID is more secure
-              console.log('✅ Face ID successful - unlocking wallet directly');
+              const result = await apisLock.unlockWallet(passwordFromKeychain);
 
-              // Mark wallet as unlocked without password verification
-              apisLock.markAsUnlocked();
-              await apisLock.updateUnlockTime();
-
-              console.log('✅ Biometric unlock successful');
-              navigation.reset({ index: 0, routes: [{ name: 'Home' }] });
-              return;
+              if (result.success) {
+                navigation.reset({ index: 0, routes: [{ name: 'Home' }] });
+                return;
+              } else {
+                setErrorMessage(
+                  'Failed to unlock wallet. Please enter your password.',
+                );
+              }
             } else {
-              console.log('❌ No password from keychain');
               setErrorMessage(
                 'Biometric authentication cancelled. Please enter your password.',
               );
@@ -117,13 +97,9 @@ const UnlockScreen: React.FC<UnlockScreenProps> = ({ navigation }) => {
     setErrorMessage('');
 
     try {
-      console.time('🔓 Total Unlock Time');
-      console.log('🚀 Starting unlock process...');
-
       const result = await apisLock.unlockWallet(password);
 
       if (result.success) {
-        console.log('✅ Unlock successful');
         // Clear password from state
         setPassword('');
 
@@ -132,7 +108,6 @@ const UnlockScreen: React.FC<UnlockScreenProps> = ({ navigation }) => {
           routes: [{ name: 'Home' }],
         });
       } else {
-        console.log('❌ Unlock failed:', result.error);
         setErrorMessage(
           result.formFieldError || result.error || 'Invalid password',
         );
@@ -141,7 +116,6 @@ const UnlockScreen: React.FC<UnlockScreenProps> = ({ navigation }) => {
       console.error('❌ Password unlock error:', error);
       setErrorMessage('Something went wrong');
     } finally {
-      console.timeEnd('🔓 Total Unlock Time');
       setIsUnlocking(false);
     }
   }, [password, navigation]);
@@ -150,7 +124,7 @@ const UnlockScreen: React.FC<UnlockScreenProps> = ({ navigation }) => {
     <SafeAreaView style={styles.container}>
       <StatusBar
         barStyle="light-content"
-        backgroundColor={Colors.background.primary}
+        backgroundColor={theme.background.primary}
       />
 
       <KeyboardAvoidingView
@@ -189,7 +163,7 @@ const UnlockScreen: React.FC<UnlockScreenProps> = ({ navigation }) => {
               disabled={!password.trim() || isUnlocking}
             >
               {isUnlocking ? (
-                <ActivityIndicator size="small" color={Colors.text.primary} />
+                <ActivityIndicator size="small" color={theme.text.primary} />
               ) : (
                 <Text style={styles.unlockButtonText}>Unlock</Text>
               )}
@@ -201,68 +175,69 @@ const UnlockScreen: React.FC<UnlockScreenProps> = ({ navigation }) => {
   );
 };
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: Colors.background.primary,
-  },
-  innerContainer: {
-    flex: 1,
-  },
-  logoContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingHorizontal: 20,
-  },
-  logo: {
-    width: 120,
-    height: 120,
-    borderRadius: 60,
-    backgroundColor: Colors.background.secondary,
-    marginBottom: 32,
-  },
-  title: {
-    ...Typography.styles.h4,
-    color: Colors.text.primary,
-    textAlign: 'center',
-  },
-  authContainer: {
-    paddingHorizontal: 20,
-    paddingBottom: 40,
-  },
-  passwordContainer: {
-    gap: 16,
-  },
-  passwordInput: {
-    ...Typography.styles.body,
-    color: Colors.text.primary,
-    backgroundColor: Colors.background.secondary,
-    borderRadius: 12,
-    paddingHorizontal: 16,
-    paddingVertical: 14,
-    minHeight: 48,
-  },
-  errorText: {
-    ...Typography.styles.label,
-    color: '#FF6B6B',
-    textAlign: 'center',
-  },
-  unlockButton: {
-    backgroundColor: Colors.brand.primary,
-    borderRadius: 12,
-    paddingVertical: 16,
-    alignItems: 'center',
-    justifyContent: 'center',
-    minHeight: 56, // Increased from 48 to accommodate full text
-  },
-  unlockButtonDisabled: {
-    backgroundColor: Colors.background.secondary,
-  },
-  unlockButtonText: {
-    ...Typography.styles.button,
-    color: Colors.text.primary,
-  },
-});
+const createStyles = (theme: ReturnType<typeof useTheme>['theme']) =>
+  StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: theme.background.primary,
+    },
+    innerContainer: {
+      flex: 1,
+    },
+    logoContainer: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+      paddingHorizontal: Spacing.lg,
+    },
+    logo: {
+      width: 120,
+      height: 120,
+      borderRadius: 60,
+      backgroundColor: theme.background.secondary,
+      marginBottom: Spacing.xl,
+    },
+    title: {
+      ...Typography.h4,
+      color: theme.text.primary,
+      textAlign: 'center',
+    },
+    authContainer: {
+      paddingHorizontal: Spacing.lg,
+      paddingBottom: Spacing.xxl,
+    },
+    passwordContainer: {
+      gap: Spacing.md,
+    },
+    passwordInput: {
+      ...Typography.body,
+      color: theme.text.primary,
+      backgroundColor: theme.background.secondary,
+      borderRadius: BorderRadius.md,
+      paddingHorizontal: Spacing.md,
+      paddingVertical: Spacing.md - 2,
+      minHeight: 48,
+    },
+    errorText: {
+      ...Typography.label14,
+      color: theme.danger[400],
+      textAlign: 'center',
+    },
+    unlockButton: {
+      backgroundColor: theme.primary[400],
+      borderRadius: BorderRadius.md,
+      paddingVertical: Spacing.md,
+      alignItems: 'center',
+      justifyContent: 'center',
+      minHeight: 56,
+    },
+    unlockButtonDisabled: {
+      backgroundColor: theme.background.secondary,
+    },
+    unlockButtonText: {
+      ...Typography.button,
+      color: theme.text.primary,
+    },
+  });
 
 export default UnlockScreen;

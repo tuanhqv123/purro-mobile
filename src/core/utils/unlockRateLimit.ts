@@ -1,16 +1,11 @@
-/**
- * Unlock rate limiting utility
- * Prevents brute force attacks by limiting unlock attempts
- */
-
 import { MMKV } from 'react-native-mmkv';
 
 const storage = new MMKV({ id: 'unlock-rate-limit' });
 
 const RATE_LIMIT_CONFIG = {
-  MAX_ATTEMPTS: 5,
-  LOCKOUT_DURATION: 5 * 60 * 1000, // 5 minutes in milliseconds
-  RESET_DURATION: 15 * 60 * 1000, // 15 minutes in milliseconds
+  MAX_ATTEMPTS: 100,
+  LOCKOUT_DURATION: 5 * 60 * 1000,
+  RESET_DURATION: 15 * 60 * 1000,
 };
 
 const STORAGE_KEYS = {
@@ -19,9 +14,6 @@ const STORAGE_KEYS = {
   LOCKOUT_UNTIL: 'lockout_until',
 };
 
-/**
- * Check if user has failed too many times
- */
 export function checkMultipleFailed(): void {
   const attempts = storage.getNumber(STORAGE_KEYS.FAILED_ATTEMPTS) || 0;
   const newAttempts = attempts + 1;
@@ -35,18 +27,12 @@ export function checkMultipleFailed(): void {
   }
 }
 
-/**
- * Reset failed attempts counter
- */
 export function resetMultipleFailed(): void {
   storage.delete(STORAGE_KEYS.FAILED_ATTEMPTS);
   storage.delete(STORAGE_KEYS.LAST_FAILED_TIME);
   storage.delete(STORAGE_KEYS.LOCKOUT_UNTIL);
 }
 
-/**
- * Check if user should be rejected due to multiple failed attempts
- */
 export function shouldRejectUnlockDueToMultipleFailed(): {
   reject: boolean;
   timeDiff: number;
@@ -69,16 +55,10 @@ export function shouldRejectUnlockDueToMultipleFailed(): {
   return { reject: true, timeDiff };
 }
 
-/**
- * Get current failed attempts count
- */
 export function getFailedAttempts(): number {
   return storage.getNumber(STORAGE_KEYS.FAILED_ATTEMPTS) || 0;
 }
 
-/**
- * Get remaining time until unlock is allowed
- */
 export function getRemainingLockoutTime(): number {
   const lockoutUntil = storage.getNumber(STORAGE_KEYS.LOCKOUT_UNTIL);
   if (!lockoutUntil) return 0;

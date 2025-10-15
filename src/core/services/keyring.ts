@@ -1,47 +1,46 @@
-/**
- * Keyring service for managing HD wallets and accounts
- * Following Rabby's keyring pattern with full HD wallet support
- */
-
 import {
   HDKeyring,
   HDKeyringData,
   generateMnemonic,
   validateMnemonic,
 } from './hdKeyring';
+import { SimpleKeyring, SimpleKeyringData } from './simpleKeyring';
 import { appEncryptor } from './encryptor';
 import { keyringStorage } from '../storage/secureStorage';
 
 export interface KeyringData {
   hdKeyrings: HDKeyringData[];
+  simpleKeyrings: SimpleKeyringData[];
   currentAddress?: string;
 }
 
-/**
- * Keyring Service - Main service for managing HD wallets
- * Supports multiple HD keyrings with BIP44 derivation
- */
 class KeyringService {
   private booted = false;
   private unlocked = false;
   private password = '';
   private hdKeyrings: HDKeyring[] = [];
-  private keyringData: KeyringData = { hdKeyrings: [] };
-  private passwordVerified = false; // Track if password was verified during boot
+  private simpleKeyrings: SimpleKeyring[] = [];
+  private keyringData: KeyringData = { hdKeyrings: [], simpleKeyrings: [] };
+  private passwordVerified = false;
 
-  /**
-   * Boot the keyring service with password
-   * Loads existing keyrings if available and auto-unlocks
-   */
   async boot(password: string): Promise<void> {
     if (this.booted) {
-      // If already booted with same password, just unlock
-      if (this.password === password && this.passwordVerified) {
-        this.unlocked = true;
+      if (this.password === password && this.passwordVerified && this.unlocked) {
         return;
       }
-      // If different password, need to verify
+      
+      if (this.password === password && this.passwordVerified && !this.unlocked) {
+        try {
+          await this.loadKeyring(password);
+          this.unlocked = true;
+          return;
+        } catch (error) {
+          throw error;
+        }
+      }
+      
       await this.verifyPassword(password);
+      await this.loadKeyring(password);
       this.unlocked = true;
       return;
     }
@@ -49,37 +48,30 @@ class KeyringService {
     this.password = password;
     this.passwordVerified = false;
 
-    // Try to load existing keyring first
     try {
       await this.loadKeyring(password);
-      this.passwordVerified = true; // Password was verified during loadKeyring
-      this.unlocked = true; // Auto-unlock if load successful
+      this.passwordVerified = true;
+      this.unlocked = true;
     } catch (error) {
-      // If no existing keyring, initialize empty state
-      this.keyringData = { hdKeyrings: [] };
+      this.keyringData = { hdKeyrings: [], simpleKeyrings: [] };
       this.passwordVerified = false;
     }
 
     this.booted = true;
   }
 
-  /**
-   * Check if keyring is booted
-   */
   isBooted(): boolean {
     return this.booted;
   }
 
-  /**
-   * Check if keyring is unlocked
-   */
   isUnlocked(): boolean {
     return this.unlocked;
   }
 
-  /**
-   * Get current password (only when unlocked)
-   */
+  hasPassword(): boolean {
+    return !!this.password && this.passwordVerified;
+  }
+
   getPassword(): string | null {
     if (!this.unlocked) {
       return null;
@@ -87,20 +79,22 @@ class KeyringService {
     return this.password;
   }
 
-  /**
-   * Generate new mnemonic phrase
-   * @param strength - Bit strength (default 128 for 12 words)
-   */
+  async setPassword(password: string): Promise<void> {
+    if (this.hasPassword()) {
+      throw new Error('Password already set. Use updatePassword to change it.');
+    }
+    this.password = password;
+    this.passwordVerified = true;
+    this.booted = true;
+    this.unlocked = true;
+    this.keyringData = { hdKeyrings: [], simpleKeyrings: [] };
+    await this.persistAllKeyrings(password);
+  }
+
   generateMnemonic(strength: number = 128): string {
     return generateMnemonic(strength);
   }
 
-  /**
-   * Create new HD keyring from mnemonic
-   * @param mnemonic - BIP39 mnemonic phrase
-   * @param passphrase - Optional BIP39 passphrase
-   * @returns Array of created account addresses
-   */
   async createHDKeyring(
     mnemonic: string,
     passphrase?: string,
@@ -109,29 +103,28 @@ class KeyringService {
       throw new Error('Keyring service not booted');
     }
 
-    console.time('✅ Validate Mnemonic');
-    if (!validateMnemonic(mnemonic)) {
+    const trimmedInput = mnemonic.trim();
+    const isPrivateKey = /^(0x)?[0-9a-fA-F]{64}$/.test(trimmedInput);
+
+    if (isPrivateKey) {
+      return this.createSimpleKeyring(trimmedInput);
+    }
+
+    if (!validateMnemonic(trimmedInput)) {
       throw new Error('Invalid mnemonic phrase');
     }
-    console.timeEnd('✅ Validate Mnemonic');
 
-    // Create new HD keyring with one account
-    console.time('🔑 New HDKeyring');
     const keyring = new HDKeyring({
-      mnemonic,
+      mnemonic: trimmedInput,
       passphrase,
       numberOfAccounts: 1,
     });
-    console.timeEnd('🔑 New HDKeyring');
 
     this.hdKeyrings.push(keyring);
     this.unlocked = true;
 
-    console.time('📍 Get Addresses');
     const addresses = keyring.getAccounts();
-    console.timeEnd('📍 Get Addresses');
 
-    // Set first account as current
     if (addresses.length > 0 && !this.keyringData.currentAddress) {
       this.keyringData.currentAddress = addresses[0];
     }
@@ -139,19 +132,31 @@ class KeyringService {
     return addresses;
   }
 
-  /**
-   * Legacy method - create keyring (redirects to HD keyring)
-   * For backward compatibility
-   */
+  async createSimpleKeyring(privateKey: string): Promise<string[]> {
+    if (!this.booted) {
+      throw new Error('Keyring service not booted');
+    }
+
+    let keyring = this.simpleKeyrings[0];
+    if (!keyring) {
+      keyring = new SimpleKeyring();
+      this.simpleKeyrings.push(keyring);
+    }
+
+    const address = keyring.addAccount(privateKey);
+    this.unlocked = true;
+
+    if (!this.keyringData.currentAddress) {
+      this.keyringData.currentAddress = address;
+    }
+
+    return [address];
+  }
+
   async createKeyring(mnemonic: string): Promise<string[]> {
     return this.createHDKeyring(mnemonic);
   }
 
-  /**
-   * Add new accounts to the first HD keyring
-   * @param count - Number of accounts to add
-   * @returns Array of new account addresses
-   */
   async addAccounts(count: number = 1): Promise<string[]> {
     if (!this.unlocked) {
       throw new Error('Keyring is locked');
@@ -165,27 +170,24 @@ class KeyringService {
     return this.hdKeyrings[0].addAccounts(count);
   }
 
-  /**
-   * Get all accounts from all HD keyrings
-   */
   getAllAccounts(): string[] {
-    return this.hdKeyrings.flatMap(kr => kr.getAccounts());
+    const hdAccounts = this.hdKeyrings.flatMap(kr => kr.getAccounts());
+    const simpleAccounts = this.simpleKeyrings.flatMap(kr => kr.getAccounts());
+    return [...hdAccounts, ...simpleAccounts];
   }
 
-  /**
-   * Legacy method - get accounts
-   */
   getAccounts(): string[] {
     return this.getAllAccounts();
   }
 
-  /**
-   * Get account info by address
-   * @param address - Account address
-   * @returns Account info or null
-   */
   getAccountByAddress(address: string): any | null {
     for (const keyring of this.hdKeyrings) {
+      const account = keyring.getAccountByAddress(address);
+      if (account) {
+        return account;
+      }
+    }
+    for (const keyring of this.simpleKeyrings) {
       const account = keyring.getAccountByAddress(address);
       if (account) {
         return account;
@@ -194,21 +196,11 @@ class KeyringService {
     return null;
   }
 
-  /**
-   * Get private key for address
-   * @param address - Account address
-   * @returns Private key or null
-   */
   getPrivateKeyByAddress(address: string): string | null {
     const account = this.getAccountByAddress(address);
     return account ? account.privateKey : null;
   }
 
-  /**
-   * Export private key for an account
-   * @param address - Account address
-   * @returns Private key string
-   */
   exportPrivateKey(address: string): string {
     if (!this.unlocked) {
       throw new Error('Keyring is locked');
@@ -224,15 +216,13 @@ class KeyringService {
     throw new Error('Account not found');
   }
 
-  /**
-   * Export mnemonic for a keyring
-   * WARNING: Only call when user explicitly requests
-   * @param keyringIndex - Index of keyring (default 0)
-   * @returns Mnemonic phrase
-   */
   exportMnemonic(keyringIndex: number = 0): string {
     if (!this.unlocked) {
       throw new Error('Keyring is locked');
+    }
+
+    if (this.hdKeyrings.length === 0) {
+      throw new Error('No HD keyring available. This wallet may have been imported with a private key.');
     }
 
     if (keyringIndex >= this.hdKeyrings.length) {
@@ -242,34 +232,65 @@ class KeyringService {
     return this.hdKeyrings[keyringIndex].getMnemonic();
   }
 
-  /**
-   * Persist all keyrings to encrypted storage
-   * @param password - Password to encrypt with
-   */
+  hasHDKeyring(): boolean {
+    return this.hdKeyrings.length > 0;
+  }
+
+  getHDKeyrings(): HDKeyring[] {
+    return this.hdKeyrings;
+  }
+
+  getSimpleKeyrings(): SimpleKeyring[] {
+    return this.simpleKeyrings;
+  }
+
+  getHDKeyringByMnemonic(mnemonic: string): HDKeyring | undefined {
+    return this.hdKeyrings.find(keyring => {
+      const serialized = keyring.serialize();
+      return serialized.mnemonic === mnemonic;
+    });
+  }
+
+  getHDKeyringByIndex(index: number): HDKeyring | undefined {
+    return this.hdKeyrings.find(keyring => {
+      const serialized = keyring.serialize();
+      return serialized.index === index;
+    });
+  }
+
+  updateHDKeyringIndex(keyring: HDKeyring): void {
+    const maxIndex = this.hdKeyrings.reduce((max, kr) => {
+      const serialized = kr.serialize();
+      return Math.max(max, serialized.index || 0);
+    }, -1);
+
+    const serialized = keyring.serialize();
+    if (serialized.index === undefined || serialized.index === 0) {
+      keyring.index = maxIndex + 1;
+    }
+  }
+
   async persistAllKeyrings(password: string): Promise<void> {
     if (!this.booted) {
       throw new Error('Keyring service not booted');
     }
 
     try {
-      // Serialize all HD keyrings
       const data: KeyringData = {
         hdKeyrings: this.hdKeyrings.map(kr => kr.serialize()),
+        simpleKeyrings: this.simpleKeyrings.map(kr => kr.serialize()),
         currentAddress: this.keyringData.currentAddress,
       };
 
-      // Check if we have data to save
-      if (data.hdKeyrings.length === 0) {
+      if (data.hdKeyrings.length === 0 && data.simpleKeyrings.length === 0) {
         throw new Error('No keyring data to save');
       }
 
-      // Encrypt and save (skip verification for speed)
       const encrypted = await appEncryptor.encrypt(password, data);
       keyringStorage.setItem('vault', encrypted);
 
       this.password = password;
     } catch (error) {
-      console.error('❌ Failed to persist keyrings:', error);
       throw new Error(
         `Failed to save wallet: ${
           error instanceof Error ? error.message : 'Unknown error'
@@ -278,49 +299,46 @@ class KeyringService {
     }
   }
 
-  /**
-   * Load keyring from encrypted storage
-   * @param password - Password to decrypt with
-   */
   private async loadKeyring(password: string): Promise<void> {
-    console.time('🔐 Load Keyring Total');
     const encryptedVault = keyringStorage.getItem<string>('vault');
 
     if (!encryptedVault) {
-      this.keyringData = { hdKeyrings: [] };
+      this.keyringData = { hdKeyrings: [], simpleKeyrings: [] };
       return;
     }
 
-    console.time('🔓 Decrypt Vault');
     const decrypted = await appEncryptor.decrypt(password, encryptedVault);
-    console.timeEnd('🔓 Decrypt Vault');
-
     this.keyringData = decrypted;
 
-    // Restore HD keyrings from serialized data
-    console.time('🔑 Restore Keyrings');
-    this.hdKeyrings = decrypted.hdKeyrings.map(
-      (data: HDKeyringData) => new HDKeyring(data),
+    this.hdKeyrings = (decrypted.hdKeyrings || []).map(
+      (data: HDKeyringData) => {
+        if (data.numberOfAccounts && !data.activeIndexes) {
+          const numberOfAccounts = data.numberOfAccounts;
+          data.activeIndexes = Array.from(
+            { length: numberOfAccounts },
+            (_, i) => i,
+          );
+          data.hdPath = "m/44'/60'/0'/0";
+          data.accountDetails = {};
+          data.byImport = true;
+          data.index = 0;
+        }
+        return new HDKeyring(data);
+      },
     );
-    console.timeEnd('🔑 Restore Keyrings');
+
+    this.simpleKeyrings = (decrypted.simpleKeyrings || []).map(
+      (data: SimpleKeyringData) => new SimpleKeyring(data),
+    );
 
     this.unlocked = true;
-    console.log(`✅ Loaded ${this.hdKeyrings.length} HD keyring(s)`);
-    console.timeEnd('🔐 Load Keyring Total');
   }
 
-  /**
-   * Verify password against stored vault
-   * @param password - Password to verify
-   */
   async verifyPassword(password: string): Promise<void> {
-    // If password was already verified during boot, skip verification
     if (this.passwordVerified && this.password === password) {
-      console.log('⚡ Password already verified, skipping');
       return;
     }
 
-    console.time('🔐 Password Verification');
     const encryptedVault = keyringStorage.getItem<string>('vault');
 
     if (!encryptedVault) {
@@ -330,41 +348,20 @@ class KeyringService {
     try {
       await appEncryptor.decrypt(password, encryptedVault);
       this.passwordVerified = true;
-      console.log('✅ Password verified successfully');
     } catch (error) {
-      console.log('❌ Password verification failed');
       throw new Error('Incorrect password');
-    } finally {
-      console.timeEnd('🔐 Password Verification');
     }
   }
 
-  /**
-   * Submit password to unlock keyring
-   * @param password - Password to unlock with
-   */
   async submitPassword(password: string): Promise<void> {
-    console.time('📝 Submit Password');
-
-    // Only verify if not already verified
     if (!this.passwordVerified || this.password !== password) {
-      console.log('🔍 Need to verify password');
       await this.verifyPassword(password);
-    } else {
-      console.log('⚡ Password already verified, skipping verification');
     }
 
     this.password = password;
     this.unlocked = true;
-    console.log('🔓 Keyring unlocked');
-    console.timeEnd('📝 Submit Password');
   }
 
-  /**
-   * Update password
-   * @param oldPassword - Current password
-   * @param newPassword - New password
-   */
   async updatePassword(
     oldPassword: string,
     newPassword: string,
@@ -374,26 +371,22 @@ class KeyringService {
     this.password = newPassword;
   }
 
-  /**
-   * Reset password (dangerous - will clear all data if wrong old password)
-   */
   async resetPassword(newPassword: string): Promise<void> {
-    this.keyringData = { hdKeyrings: [] };
+    this.keyringData = { hdKeyrings: [], simpleKeyrings: [] };
     this.hdKeyrings = [];
+    this.simpleKeyrings = [];
     await this.persistAllKeyrings(newPassword);
     this.password = newPassword;
   }
 
-  /**
-   * Dangerously reset password and keyrings
-   */
   async dangerouslyResetPasswordAndKeyrings(
     oldPassword: string,
     newPassword?: string,
   ): Promise<void> {
     await this.verifyPassword(oldPassword);
     this.hdKeyrings = [];
-    this.keyringData = { hdKeyrings: [] };
+    this.simpleKeyrings = [];
+    this.keyringData = { hdKeyrings: [], simpleKeyrings: [] };
     if (newPassword) {
       await this.persistAllKeyrings(newPassword);
     } else {
@@ -401,17 +394,10 @@ class KeyringService {
     }
   }
 
-  /**
-   * Get current active address
-   */
   getCurrentAddress(): string | undefined {
     return this.keyringData.currentAddress;
   }
 
-  /**
-   * Set current active address
-   * @param address - Address to set as current
-   */
   setCurrentAddress(address: string): void {
     const allAccounts = this.getAllAccounts();
     if (!allAccounts.includes(address)) {
@@ -420,31 +406,20 @@ class KeyringService {
     this.keyringData.currentAddress = address;
   }
 
-  /**
-   * Lock keyring
-   */
   lock(): void {
     this.unlocked = false;
-    this.password = '';
-    console.log('🔒 Keyring locked');
   }
 
-  /**
-   * Clear all data (dangerous!)
-   */
   clearAll(): void {
     this.hdKeyrings = [];
-    this.keyringData = { hdKeyrings: [] };
+    this.simpleKeyrings = [];
+    this.keyringData = { hdKeyrings: [], simpleKeyrings: [] };
     this.unlocked = false;
     this.password = '';
     this.booted = false;
     keyringStorage.removeItem('vault');
-    console.log('🗑️ All keyring data cleared');
   }
 
-  /**
-   * Get count of accounts
-   */
   async getCountOfAccountsInKeyring(): Promise<number> {
     return this.getAllAccounts().length;
   }

@@ -10,9 +10,8 @@ import {
   Switch,
   Alert,
 } from 'react-native';
-import { Colors } from '@/constants/colors';
+import { useTheme, Typography, Spacing, BorderRadius } from '@/theme';
 import { RcNextLeftCC, RcArrowRightCC } from '@/assets/icons/common';
-import { Typography } from '@/constants/typography';
 import { useTranslation } from '@/utils/i18n';
 import { useBiometrics } from '@/hooks/biometrics';
 import { apisLock, apisWallet, apisKeychain } from '@/core/apis';
@@ -26,6 +25,8 @@ interface SettingItemProps {
   onPress?: () => void;
   showArrow?: boolean;
   rightComponent?: React.ReactNode;
+  styles: any;
+  theme: any;
 }
 
 const SettingItem: React.FC<SettingItemProps> = ({
@@ -34,6 +35,8 @@ const SettingItem: React.FC<SettingItemProps> = ({
   onPress,
   showArrow = true,
   rightComponent,
+  styles,
+  theme,
 }) => (
   <TouchableOpacity
     style={styles.settingItem}
@@ -46,37 +49,33 @@ const SettingItem: React.FC<SettingItemProps> = ({
     </View>
     {rightComponent ||
       (showArrow && (
-        <RcArrowRightCC width={20} height={20} color={Colors.brand.primary} />
+        <RcArrowRightCC width={20} height={20} color={theme.primary[400]} />
       ))}
   </TouchableOpacity>
 );
 
 // Section Header Component
-const SectionHeader: React.FC<{ title: string }> = ({ title }) => (
+interface SectionHeaderProps {
+  title: string;
+  styles: any;
+}
+
+const SectionHeader: React.FC<SectionHeaderProps> = ({ title, styles }) => (
   <View style={styles.sectionHeader}>
     <Text style={styles.sectionTitle}>{title}</Text>
   </View>
 );
 
 const SettingsScreen: React.FC<SettingsScreenProps> = ({ navigation }) => {
+  const { theme } = useTheme();
+  const styles = createStyles(theme);
   useTranslation();
+
   const {
     computed: { isBiometricsEnabled, defaultTypeLabel, couldSetupBiometrics },
     toggleBiometrics,
     fetchBiometrics,
-    biometrics,
   } = useBiometrics({ autoFetch: true });
-
-  console.log('⚙️ Settings - Biometrics state:', {
-    isBiometricsEnabled,
-    defaultTypeLabel,
-    couldSetupBiometrics,
-    supportedBiometryType: biometrics.supportedBiometryType,
-    authEnabled: biometrics.authEnabled,
-  });
-
-  // Force show toggle for debugging
-  const forceShowToggle = true;
 
   const [isEnablingBiometrics, setIsEnablingBiometrics] = useState(false);
 
@@ -213,10 +212,8 @@ const SettingsScreen: React.FC<SettingsScreenProps> = ({ navigation }) => {
     ]);
   };
 
-  const handleBackupWallet = () => {
-    Alert.alert('Backup Wallet', 'Backup wallet feature coming soon', [
-      { text: 'OK', style: 'default' },
-    ]);
+  const handleShowRecoveryPhrase = () => {
+    navigation.navigate('ExportPassword');
   };
 
   const handleResetWallet = () => {
@@ -257,13 +254,13 @@ const SettingsScreen: React.FC<SettingsScreenProps> = ({ navigation }) => {
     <SafeAreaView style={styles.container}>
       <StatusBar
         barStyle="light-content"
-        backgroundColor={Colors.background.primary}
+        backgroundColor={theme.background.primary}
       />
 
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity style={styles.backButton} onPress={handleBack}>
-          <RcNextLeftCC width={24} height={24} color={Colors.brand.primary} />
+          <RcNextLeftCC width={24} height={24} color={theme.primary[400]} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Settings</Text>
         <View style={styles.headerRight} />
@@ -274,9 +271,9 @@ const SettingsScreen: React.FC<SettingsScreenProps> = ({ navigation }) => {
         contentContainerStyle={styles.scrollContent}
       >
         {/* Security Section */}
-        <SectionHeader title="Security" />
+        <SectionHeader title="Security" styles={styles} />
         <View style={styles.section}>
-          {(couldSetupBiometrics || forceShowToggle) && (
+          {couldSetupBiometrics && (
             <SettingItem
               title={`${defaultTypeLabel} Authentication`}
               subtitle={
@@ -286,16 +283,18 @@ const SettingsScreen: React.FC<SettingsScreenProps> = ({ navigation }) => {
               }
               showArrow={false}
               onPress={() => handleBiometricToggle(!isBiometricsEnabled)}
+              styles={styles}
+              theme={theme}
               rightComponent={
                 <View style={styles.switchContainer}>
                   <Switch
                     value={isBiometricsEnabled}
                     onValueChange={handleBiometricToggle}
                     trackColor={{
-                      false: Colors.background.secondary,
-                      true: Colors.brand.primary,
+                      false: theme.background.secondary,
+                      true: theme.primary[400],
                     }}
-                    thumbColor={Colors.system.white}
+                    thumbColor={theme.neutral.white.base}
                     disabled={isEnablingBiometrics}
                   />
                 </View>
@@ -306,46 +305,56 @@ const SettingsScreen: React.FC<SettingsScreenProps> = ({ navigation }) => {
             title="Change Password"
             subtitle="Update your wallet password"
             onPress={handleChangePassword}
+            styles={styles}
+            theme={theme}
           />
         </View>
 
         {/* Wallet Section */}
-        <SectionHeader title="Wallet" />
+        <SectionHeader title="Wallet" styles={styles} />
         <View style={styles.section}>
           <SettingItem
-            title="Backup Wallet"
-            subtitle="View your seed phrase"
-            onPress={handleBackupWallet}
+            title="Show Recovery Phrase"
+            subtitle="View your wallet's seed phrase"
+            onPress={handleShowRecoveryPhrase}
+            styles={styles}
+            theme={theme}
           />
         </View>
 
         {/* About Section */}
-        <SectionHeader title="About" />
+        <SectionHeader title="About" styles={styles} />
         <View style={styles.section}>
-          <SettingItem title="Version" subtitle="1.0.0" showArrow={false} />
+          <SettingItem
+            title="Version"
+            subtitle="1.0.0"
+            showArrow={false}
+            styles={styles}
+            theme={theme}
+          />
           <SettingItem
             title="Terms of Service"
             onPress={() => Alert.alert('Terms', 'Terms of Service')}
+            styles={styles}
+            theme={theme}
           />
           <SettingItem
             title="Privacy Policy"
             onPress={() => Alert.alert('Privacy', 'Privacy Policy')}
+            styles={styles}
+            theme={theme}
           />
         </View>
 
         {/* Danger Zone */}
-        <SectionHeader title="Danger Zone" />
+        <SectionHeader title="Danger Zone" styles={styles} />
         <View style={styles.section}>
           <TouchableOpacity
             style={styles.dangerItem}
             onPress={handleResetWallet}
           >
             <Text style={styles.dangerItemText}>Reset Wallet</Text>
-            <RcArrowRightCC
-              width={20}
-              height={20}
-              color={Colors.brand.primary}
-            />
+            <RcArrowRightCC width={20} height={20} color={theme.primary[400]} />
           </TouchableOpacity>
         </View>
 
@@ -361,130 +370,131 @@ const SettingsScreen: React.FC<SettingsScreenProps> = ({ navigation }) => {
   );
 };
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: Colors.background.primary,
-  },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingVertical: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: 'rgba(106, 114, 130, 0.1)',
-  },
-  backButton: {
-    width: 40,
-    height: 40,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  backIcon: {
-    width: 24,
-    height: 24,
-    backgroundColor: Colors.text.secondary,
-    borderRadius: 12,
-  },
-  headerTitle: {
-    ...Typography.styles.h4,
-    fontSize: 20,
-    color: Colors.text.primary,
-  },
-  headerRight: {
-    width: 40,
-  },
-  scrollView: {
-    flex: 1,
-  },
-  scrollContent: {
-    paddingBottom: 40,
-  },
-  sectionHeader: {
-    paddingHorizontal: 20,
-    paddingTop: 32,
-    paddingBottom: 12,
-  },
-  sectionTitle: {
-    ...Typography.styles.label,
-    fontSize: 12,
-    fontWeight: '600',
-    color: Colors.text.secondary,
-    textTransform: 'uppercase',
-    letterSpacing: 1,
-  },
-  section: {
-    backgroundColor: Colors.background.secondary,
-    marginHorizontal: 20,
-    borderRadius: 12,
-    overflow: 'hidden',
-  },
-  settingItem: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: 'rgba(106, 114, 130, 0.1)',
-  },
-  settingItemLeft: {
-    flex: 1,
-    gap: 4,
-  },
-  settingItemTitle: {
-    ...Typography.styles.body,
-    fontSize: 16,
-    color: Colors.text.primary,
-  },
-  settingItemSubtitle: {
-    ...Typography.styles.label,
-    color: Colors.text.secondary,
-  },
-  settingItemArrow: {
-    width: 20,
-    height: 20,
-    backgroundColor: Colors.text.secondary,
-    borderRadius: 10,
-    marginLeft: 12,
-  },
-  switchContainer: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: 8, // Thụt vào trái để không bị overflow
-    minWidth: 51, // Đảm bảo có đủ không gian cho Switch
-  },
-  dangerItem: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 16,
-    backgroundColor: 'rgba(255, 107, 107, 0.1)',
-  },
-  dangerItemText: {
-    ...Typography.styles.body,
-    fontSize: 16,
-    color: '#FF6B6B',
-    fontWeight: '600',
-  },
-  footer: {
-    alignItems: 'center',
-    paddingTop: 40,
-    paddingBottom: 20,
-    gap: 8,
-  },
-  footerText: {
-    ...Typography.styles.label,
-    color: Colors.text.secondary,
-    textAlign: 'center',
-  },
-  footerTextSmall: {
-    ...Typography.styles.caption,
-    color: Colors.text.secondary,
-    textAlign: 'center',
-  },
-});
+const createStyles = (theme: ReturnType<typeof useTheme>['theme']) =>
+  StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: theme.background.primary,
+    },
+    header: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      paddingHorizontal: Spacing.lg,
+      paddingVertical: Spacing.md,
+      borderBottomWidth: 1,
+      borderBottomColor: 'rgba(106, 114, 130, 0.1)',
+    },
+    backButton: {
+      width: 40,
+      height: 40,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    backIcon: {
+      width: 24,
+      height: 24,
+      backgroundColor: theme.text.secondary,
+      borderRadius: BorderRadius.md,
+    },
+    headerTitle: {
+      ...Typography.h4,
+      fontSize: 20,
+      color: theme.text.primary,
+    },
+    headerRight: {
+      width: 40,
+    },
+    scrollView: {
+      flex: 1,
+    },
+    scrollContent: {
+      paddingBottom: Spacing.xxl,
+    },
+    sectionHeader: {
+      paddingHorizontal: Spacing.lg,
+      paddingTop: Spacing.xl,
+      paddingBottom: Spacing.md - 4,
+    },
+    sectionTitle: {
+      ...Typography.label14,
+      fontSize: 12,
+      fontWeight: '600',
+      color: theme.text.secondary,
+      textTransform: 'uppercase',
+      letterSpacing: 1,
+    },
+    section: {
+      backgroundColor: theme.background.secondary,
+      marginHorizontal: Spacing.lg,
+      borderRadius: BorderRadius.md,
+      overflow: 'hidden',
+    },
+    settingItem: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      paddingHorizontal: Spacing.md,
+      paddingVertical: Spacing.md,
+      borderBottomWidth: 1,
+      borderBottomColor: 'rgba(106, 114, 130, 0.1)',
+    },
+    settingItemLeft: {
+      flex: 1,
+      gap: 4,
+    },
+    settingItemTitle: {
+      ...Typography.body,
+      fontSize: 16,
+      color: theme.text.primary,
+    },
+    settingItemSubtitle: {
+      ...Typography.label14,
+      color: theme.text.secondary,
+    },
+    settingItemArrow: {
+      width: 20,
+      height: 20,
+      backgroundColor: theme.text.secondary,
+      borderRadius: 10,
+      marginLeft: Spacing.md - 4,
+    },
+    switchContainer: {
+      alignItems: 'center',
+      justifyContent: 'center',
+      marginRight: Spacing.sm,
+      minWidth: 51,
+    },
+    dangerItem: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      paddingHorizontal: Spacing.md,
+      paddingVertical: Spacing.md,
+      backgroundColor: 'rgba(255, 107, 107, 0.1)',
+    },
+    dangerItemText: {
+      ...Typography.body,
+      fontSize: 16,
+      color: theme.danger[400],
+      fontWeight: '600',
+    },
+    footer: {
+      alignItems: 'center',
+      paddingTop: Spacing.xxl,
+      paddingBottom: Spacing.lg,
+      gap: Spacing.sm,
+    },
+    footerText: {
+      ...Typography.label14,
+      color: theme.text.secondary,
+      textAlign: 'center',
+    },
+    footerTextSmall: {
+      ...Typography.label14,
+      color: theme.text.secondary,
+      textAlign: 'center',
+    },
+  });
 
 export default SettingsScreen;

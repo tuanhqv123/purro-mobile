@@ -1,8 +1,3 @@
-/**
- * Typography constants for Purro Wallet
- * Based on Figma design using Figtree font
- */
-
 export const Typography = {
   // Font families (Figtree from Figma, fallback to system)
   fontFamily: {

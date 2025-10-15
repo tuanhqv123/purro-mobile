@@ -1,8 +1,3 @@
-/**
- * Storage Index
- * Central export point for storage adapters
- */
-
 export {
   keyringStorage,
   walletStorage,

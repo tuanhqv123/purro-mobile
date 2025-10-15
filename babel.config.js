@@ -11,5 +11,9 @@ module.exports = {
         },
       },
     ],
+    ['nativewind/babel', {}],
+    ['@babel/plugin-transform-export-namespace-from'],
+    // React Native Reanimated plugin - MUST be last
+    'react-native-reanimated/plugin',
   ],
 };

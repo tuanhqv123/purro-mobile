@@ -1,94 +1,87 @@
-/**
- * i18n utility for internationalization
- */
-
-import i18n from 'i18next';
+import i18n, { TFunction } from 'i18next';
 import {
   initReactI18next,
   useTranslation as useI18nTranslation,
 } from 'react-i18next';
-import messages from '@/locales/en/messages.json';
 
-// English translations
-const en = {
-  translation: messages as Record<string, any>,
-  fallback: {
-    common: {
-      continue: 'Continue',
-      cancel: 'Cancel',
-      confirm: 'Confirm',
-      ok: 'OK',
-      error: 'Error',
-      success: 'Success',
-    },
-    welcome: {
-      title: 'Welcome to Purro',
-      subtitle: 'Your Gateway to Hyperliquid',
-      createWallet: 'Create wallet',
-      importWallet: 'Import existing wallet',
-      termsRequired: 'Terms Required',
-      acceptTerms:
-        'Please accept the Terms of Service and Privacy Policy to continue.',
-    },
-    seedPhrase: {
-      title: 'Your Seed Phrase',
-      verifyTitle: 'Verify seed phrase',
-      saved: "I've saved my seed phrase",
-      warning:
-        'Store your seed phrase in a safe & offline place, never share it with anyone. This is the only way to recover your wallet.',
-      securityNotice: 'Security Notice',
-      screenshotDisabled:
-        'Screenshots are disabled for your security. Please write down your seed phrase on paper and store it safely.',
-    },
-    password: {
-      createTitle: 'Create password',
-      enterPassword: 'Enter password',
-      confirmPassword: 'Confirm password',
-      requirement: 'Password must be at least 8 characters',
-      mismatch: 'Passwords do not match',
-    },
-    unlock: {
-      title: 'Unlock Purro Wallet',
-      enterPassword: 'Enter your password',
-      invalidPassword: 'Invalid password',
-      tooManyAttempts: 'Too many failed attempts',
-    },
-    biometrics: {
-      enable: 'Enable Biometric Authentication?',
-      enableMessage:
-        'Would you like to use Face ID / Touch ID to unlock your wallet?',
-      faceId: 'Face ID',
-      touchId: 'Touch ID',
-      fingerprint: 'Fingerprint',
-    },
-    native: {
-      authentication: {
-        auth_prompt_title: 'Authenticate',
-        auth_prompt_desc: 'Please authenticate to continue',
-        auth_prompt_cancel: 'Cancel',
+import enTranslations from '@/locales/en/translations.json';
+import viTranslations from '@/locales/vi/translations.json';
+import { FALLBACK_LANGUAGE } from '@/locales';
+import { languageStorage } from '@/core/storage/language';
+
+export const initI18n = async () => {
+  const savedLanguage = await languageStorage.getLanguage();
+
+  await i18n.use(initReactI18next).init({
+    compatibilityJSON: 'v3',
+    resources: {
+      en: {
+        translation: enTranslations,
+      },
+      vi: {
+        translation: viTranslations,
       },
     },
-  },
-};
-
-// Initialize i18n
-i18n
-  .use(initReactI18next)
-  .init({
-    compatibilityJSON: 'v3',
-    resources: { en },
-    lng: 'en',
-    fallbackLng: 'en',
+    lng: savedLanguage,
+    fallbackLng: FALLBACK_LANGUAGE,
     interpolation: {
       escapeValue: false,
     },
-  })
-  .catch((error: unknown) => {
-    console.error('i18n initialization error:', error);
   });
+};
 
-export default i18n;
+export type TranslationKey =
+  | 'common.ok'
+  | 'common.cancel'
+  | 'common.continue'
+  | 'common.back'
+  | 'common.next'
+  | 'common.confirm'
+  | 'welcome.title'
+  | 'welcome.subtitle'
+  | 'welcome.createWallet'
+  | 'welcome.importWallet'
+  | 'welcome.termsText'
+  | 'seedPhrase.display.title'
+  | 'seedPhrase.display.subtitle'
+  | 'seedPhrase.display.confirmation'
+  | 'seedPhrase.display.warning'
+  | 'seedPhrase.verify.title'
+  | 'seedPhrase.verify.subtitle'
+  | 'password.create.title'
+  | 'password.create.subtitle'
+  | 'password.create.passwordLabel'
+  | 'password.create.confirmLabel'
+  | 'password.create.passwordPlaceholder'
+  | 'password.create.confirmPlaceholder'
+  | 'password.create.requirement'
+  | 'password.create.enableBiometrics'
+  | 'password.create.validation.tooShort'
+  | 'password.create.validation.mismatch'
+  | 'unlock.title'
+  | 'unlock.subtitle'
+  | 'unlock.passwordLabel'
+  | 'unlock.passwordPlaceholder'
+  | 'unlock.unlockButton'
+  | 'unlock.forgotPassword'
+  | 'unlock.useBiometrics'
+  | 'unlock.error.incorrect'
+  | 'home.title'
+  | 'home.balance'
+  | 'settings.title'
+  | 'wallet.create.success.title'
+  | 'wallet.create.success.subtitle'
+  | 'wallet.create.success.button'
+  | 'errors.generic.title'
+  | 'errors.generic.message';
 
-export const useTranslation = () => {
+interface UseTranslationResult {
+  t: TFunction;
+  i18n: typeof i18n;
+}
+
+export const useTranslation = (): UseTranslationResult => {
   return useI18nTranslation();
 };
+
+export default i18n;

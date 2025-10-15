@@ -1,4 +1,3 @@
-import { RABBY_MOBILE_KR_PWD } from '@/constant/encryptor';
 import { keyringService, lockService } from '../services';
 import { makeEEClass } from './event';
 import { formatTimeReadable } from '@/utils/time';
@@ -8,12 +7,6 @@ import {
   shouldRejectUnlockDueToMultipleFailed,
 } from '../utils/unlockRateLimit';
 
-export const enum PasswordStatus {
-  Unknown = -1,
-  UseBuiltIn = 1,
-  Custom = 11,
-}
-
 export type UIAuthType = 'none' | 'password' | 'biometrics';
 export type ValidationBehaviorOnFinishedContext = {
   hasSetupCustomPassword?: boolean;
@@ -21,12 +14,6 @@ export type ValidationBehaviorOnFinishedContext = {
   getValidatedPassword: () => string;
 };
 export type ValidationBehaviorProps = {
-  /**
-   * @description external-defined validatie password user input.
-   * Throw an error to interrupt the post process, and `error.message` will be shown.
-   *
-   * @param password
-   */
   validationHandler?(password: string): void | Promise<void>;
   onFinished?(ctx: ValidationBehaviorOnFinishedContext): void;
 };
@@ -43,14 +30,14 @@ export function parseValidationBehavior(props?: ValidationBehaviorProps) {
   };
 }
 
-function getInitError(password: string) {
-  if (password === RABBY_MOBILE_KR_PWD) {
-    return {
-      error: 'Incorret Password',
-    };
+function validatePassword(password: string): string {
+  if (!password || password.trim().length === 0) {
+    return 'Password cannot be empty';
   }
-
-  return { error: '' };
+  if (password.length < 8) {
+    return 'Password must be at least 8 characters';
+  }
+  return '';
 }
 
 /* ===================== Password:start ===================== */
@@ -81,185 +68,66 @@ export async function throwErrorIfInvalidPwd(password: string) {
 }
 
 export async function setupWalletPassword(newPassword: string) {
-  const result = getInitError(newPassword);
-  if (result.error) return result;
-
-  if (!newPassword) {
-    result.error = 'Password cannot be empty';
-    return result;
+  const validationError = validatePassword(newPassword);
+  if (validationError) {
+    return { error: validationError };
   }
 
   try {
-    const r = await safeVerifyPassword(RABBY_MOBILE_KR_PWD);
-    if (r.error) {
-      console.log('r.error', r.error, RABBY_MOBILE_KR_PWD);
-      throw new Error(ERRORS.CURRENT_IS_INCORRET);
-    }
-    await keyringService.updatePassword(RABBY_MOBILE_KR_PWD, newPassword);
+    await keyringService.setPassword(newPassword);
+    return { error: '' };
   } catch (error: any) {
-    result.error = error?.message || 'Failed to set password';
+    return { error: error?.message || 'Failed to set password' };
   }
-
-  return result;
 }
 
-/**
- * @deprecated not used now
- */
+export async function shouldAskSetPassword() {
+  return !keyringService.hasPassword();
+}
+
 export async function updateWalletPassword(
   oldPassword: string,
   newPassword: string,
 ) {
-  const result = getInitError(newPassword);
-  if (result.error) return result;
+  const validationError = validatePassword(newPassword);
+  if (validationError) {
+    return { error: validationError };
+  }
 
   try {
-    const r = await safeVerifyPassword(oldPassword);
-    if (r.error) throw new Error(ERRORS.CURRENT_IS_INCORRET);
+    await keyringService.verifyPassword(oldPassword);
   } catch (error) {
-    result.error = ERRORS.CURRENT_IS_INCORRET;
-    return result;
+    return { error: ERRORS.INCORRECT_PASSWORD };
   }
 
   try {
     await keyringService.updatePassword(oldPassword, newPassword);
-  } catch (error) {
-    result.error = 'Failed to set password';
+    return { error: '' };
+  } catch (error: any) {
+    return { error: error?.message || 'Failed to update password' };
   }
-
-  return result;
 }
 
-export async function shouldAskSetPassword() {
-  const lockInfo = await getRabbyLockInfo();
-
-  if (!lockInfo.isUseCustomPwd) return true;
-
-  return (await keyringService.getCountOfAccountsInKeyring()) === 0;
-}
-
-export async function resetPasswordOnUI(newPassword: string) {
-  const result = getInitError(newPassword);
-  if (result.error) return result;
-
-  try {
-    const hasAccountsInKeyring =
-      (await keyringService.getCountOfAccountsInKeyring()) > 0;
-
-    if (hasAccountsInKeyring) {
-      const lockInfo = await getRabbyLockInfo();
-      if (!lockInfo.isUseCustomPwd) {
-        await setupWalletPassword(newPassword);
-      } else {
-        throw new Error(
-          'Cannot reset password when using custom password and have rest accounts',
-        );
-      }
-      // await updateWalletPassword(RABBY_MOBILE_KR_PWD, newPassword);
-    } else {
-      await keyringService.resetPassword(newPassword);
-    }
-  } catch (error) {
-    console.error(error);
-    result.error = 'Failed to reset password';
-  }
-
-  return result;
-}
-
-export async function dangerouslyResetPasswordAndKeyrings(
-  oldPassword: string,
-  newPassword?: string,
-) {
-  const result = { error: '' };
-  if (result.error) return result;
-
-  try {
-    await keyringService.dangerouslyResetPasswordAndKeyrings(
-      oldPassword,
-      newPassword,
-    );
-  } catch (error) {
-    console.error(error);
-    result.error = 'Failed to reset password an clear keyrings';
-  }
-
-  return result;
-}
-
-/**
- * @warn ONLY used in test package, not used in production
- */
-export async function clearCustomPassword(currentPassword: string) {
-  const result = getInitError(currentPassword);
-  if (result.error) return result;
-  try {
-    const r = await safeVerifyPassword(currentPassword);
-    if (r.error) throw new Error(ERRORS.CURRENT_IS_INCORRET);
-  } catch (error) {
-    result.error = ERRORS.CURRENT_IS_INCORRET;
-    return result;
+export async function resetWalletAndPassword(newPassword: string) {
+  const validationError = validatePassword(newPassword);
+  if (validationError) {
+    return { error: validationError };
   }
 
   try {
-    await keyringService.updatePassword(currentPassword, RABBY_MOBILE_KR_PWD);
-  } catch (error) {
-    result.error = 'Failed to cancel password';
+    await keyringService.resetPassword(newPassword);
+    return { error: '' };
+  } catch (error: any) {
+    return { error: error?.message || 'Failed to reset password' };
   }
-
-  return result;
 }
 
 /* ===================== Password:end ===================== */
 
-export async function getRabbyLockInfo() {
-  const info = {
-    pwdStatus: PasswordStatus.Unknown,
-    isUseBuiltInPwd: false,
-    isUseCustomPwd: false,
-    isUseBiometrics: false,
-  };
-
-  try {
-    const verifyResult = await safeVerifyPassword(RABBY_MOBILE_KR_PWD);
-    info.pwdStatus = verifyResult.success
-      ? PasswordStatus.UseBuiltIn
-      : PasswordStatus.Custom;
-  } catch (e) {
-    info.pwdStatus = PasswordStatus.Unknown;
-  }
-
-  info.isUseBuiltInPwd = info.pwdStatus === PasswordStatus.UseBuiltIn;
-  info.isUseCustomPwd = info.pwdStatus === PasswordStatus.Custom;
-
-  return info;
-}
-
-async function tryAutoUnlockRabbyMobile() {
-  // // leave here for debugging
-  if (__DEV__) {
-    console.debug(
-      'tryAutoUnlockRabbyMobile:: RABBY_MOBILE_KR_PWD',
-      RABBY_MOBILE_KR_PWD,
-    );
-  }
-
-  if (!keyringService.isBooted()) {
-    await keyringService.boot(RABBY_MOBILE_KR_PWD);
-  }
-  const lockInfo = await getRabbyLockInfo();
-
-  try {
-    if (lockInfo.isUseBuiltInPwd && !keyringService.isUnlocked()) {
-      await keyringService.submitPassword(RABBY_MOBILE_KR_PWD);
-    }
-  } catch (e) {
-    console.error('[tryAutoUnlockRabbyMobile]');
-    console.error(e);
-  }
-
+export async function getLockInfo() {
   return {
-    lockInfo,
+    hasPassword: keyringService.hasPassword(),
+    isUnlocked: keyringService.isUnlocked(),
   };
 }
 
@@ -362,31 +230,23 @@ function makeLockApiWithUpdateUnlockTime<T extends (...args: any[]) => any>(
   } as T;
 }
 
-export const tryAutoUnlockRabbyMobileWithUpdateUnlockTime =
-  makeLockApiWithUpdateUnlockTime(tryAutoUnlockRabbyMobile);
 export const unlockWalletWithUpdateUnlockTime =
   makeLockApiWithUpdateUnlockTime(unlockWallet);
 export const safeVerifyPasswordAndUpdateUnlockTime =
   makeLockApiWithUpdateUnlockTime(safeVerifyPassword);
 
 export function subscribeAppLock(_fn: () => void) {
-  // TODO: Implement event subscription when keyring service supports it
-  // For now, return a no-op dispose function
   const dispose = () => {
     // No-op
   };
-
   return dispose;
 }
 
-// Export APIs object for convenience
 export const apisLock = {
   setupWalletPassword,
   updateWalletPassword,
-  resetPasswordOnUI,
-  dangerouslyResetPasswordAndKeyrings,
-  clearCustomPassword,
-  getRabbyLockInfo,
+  resetWalletAndPassword,
+  getLockInfo,
   isUnlocked,
   unlockWallet,
   verifyPassword,
@@ -394,7 +254,6 @@ export const apisLock = {
   getUnlockTime,
   updateUnlockTime,
   markAsUnlocked: () => lockService.markAsUnlocked(),
-  tryAutoUnlockRabbyMobileWithUpdateUnlockTime,
   unlockWalletWithUpdateUnlockTime,
   safeVerifyPasswordAndUpdateUnlockTime,
   subscribeAppLock,

@@ -1,7 +1,3 @@
-/**
- * Navigation types for React Navigation
- */
-
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 
 export type RootStackParamList = {
@@ -9,8 +5,24 @@ export type RootStackParamList = {
   Welcome: undefined;
   SeedPhraseDisplay: { mnemonic: string };
   SeedPhraseVerify: { mnemonic: string };
-  CreatePassword: { mnemonic: string };
+  CreatePassword: {
+    mnemonic: string;
+    isImport?: boolean;
+  };
   WalletSuccess: undefined;
+
+  // Import flow
+  ImportMethods: undefined;
+  ImportSeedPhrase: undefined;
+  ImportPrivateKey: undefined;
+  ImportSuccess: {
+    type: 'seedPhrase' | 'privateKey';
+    address: string;
+  };
+
+  // Export flow
+  ExportPassword: undefined;
+  ExportSeedPhrase: { mnemonic: string };
 
   // Auth flow
   Unlock: undefined;
@@ -59,4 +71,34 @@ export type SettingsScreenProps = NativeStackScreenProps<
 export type WalletSuccessScreenProps = NativeStackScreenProps<
   RootStackParamList,
   'WalletSuccess'
+>;
+
+export type ImportMethodsScreenProps = NativeStackScreenProps<
+  RootStackParamList,
+  'ImportMethods'
+>;
+
+export type ImportSeedPhraseScreenProps = NativeStackScreenProps<
+  RootStackParamList,
+  'ImportSeedPhrase'
+>;
+
+export type ImportPrivateKeyScreenProps = NativeStackScreenProps<
+  RootStackParamList,
+  'ImportPrivateKey'
+>;
+
+export type ImportSuccessScreenProps = NativeStackScreenProps<
+  RootStackParamList,
+  'ImportSuccess'
+>;
+
+export type ExportPasswordScreenProps = NativeStackScreenProps<
+  RootStackParamList,
+  'ExportPassword'
+>;
+
+export type ExportSeedPhraseScreenProps = NativeStackScreenProps<
+  RootStackParamList,
+  'ExportSeedPhrase'
 >;

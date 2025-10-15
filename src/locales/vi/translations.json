@@ -1,0 +1,218 @@
+{
+  "common": {
+    "ok": "Đồng ý",
+    "cancel": "Hủy",
+    "continue": "Tiếp tục",
+    "back": "Quay lại",
+    "next": "Tiếp theo",
+    "confirm": "Xác nhận",
+    "delete": "Xóa",
+    "save": "Lưu",
+    "edit": "Sửa",
+    "close": "Đóng",
+    "done": "Hoàn tất",
+    "skip": "Bỏ qua",
+    "retry": "Thử lại",
+    "enable": "Bật",
+    "disable": "Tắt",
+    "success": "Thành công",
+    "error": "Lỗi",
+    "warning": "Cảnh báo",
+    "info": "Thông tin"
+  },
+  "welcome": {
+    "title": "Chào mừng đến với Purro Wallet",
+    "subtitle": "Cổng kết nối của bạn đến Hyperliquid",
+    "createWallet": "Tạo Ví",
+    "importWallet": "Nhập Ví",
+    "termsText": "Tôi chấp nhận Điều khoản Dịch vụ và Chính sách Bảo mật",
+    "termsRequired": {
+      "title": "Yêu cầu Điều khoản",
+      "message": "Vui lòng chấp nhận Điều khoản Dịch vụ và Chính sách Bảo mật để tiếp tục."
+    }
+  },
+  "seedPhrase": {
+    "display": {
+      "title": "Cụm từ Khôi phục",
+      "subtitle": "Lưu cụm từ khôi phục an toàn",
+      "confirmation": "Tôi đã lưu cụm từ khôi phục",
+      "warning": "Lưu cụm từ khôi phục ở nơi an toàn & ngoại tuyến, không bao giờ chia sẻ với ai. Đây là cách duy nhất để khôi phục ví của bạn.",
+      "securityNotice": {
+        "title": "Thông báo Bảo mật",
+        "message": "Chụp màn hình đã bị vô hiệu hóa để bảo mật. Vui lòng viết cụm từ khôi phục ra giấy và cất giữ an toàn."
+      }
+    },
+    "verify": {
+      "title": "Xác minh cụm từ khôi phục",
+      "subtitle": "Nhập đúng từ để xác minh",
+      "wordLabel": "Từ thứ {{number}}",
+      "placeholder": "Nhập từ",
+      "error": {
+        "incorrect": "Từ không đúng. Vui lòng thử lại.",
+        "empty": "Vui lòng nhập tất cả các từ."
+      }
+    }
+  },
+  "password": {
+    "create": {
+      "title": "Tạo Mật khẩu",
+      "subtitle": "Bảo mật ví với mật khẩu",
+      "passwordLabel": "Mật khẩu",
+      "confirmLabel": "Xác nhận Mật khẩu",
+      "passwordPlaceholder": "Nhập mật khẩu",
+      "confirmPlaceholder": "Nhập lại mật khẩu",
+      "requirement": "Ít nhất 8 ký tự",
+      "enableBiometrics": "Bật xác thực sinh trắc học",
+      "validation": {
+        "tooShort": "Mật khẩu phải có ít nhất 8 ký tự",
+        "mismatch": "Mật khẩu không khớp",
+        "empty": "Mật khẩu không được để trống"
+      }
+    }
+  },
+  "unlock": {
+    "title": "Mở khóa",
+    "subtitle": "Nhập mật khẩu của bạn",
+    "passwordLabel": "Mật khẩu",
+    "passwordPlaceholder": "Nhập mật khẩu",
+    "unlockButton": "Mở khóa",
+    "forgotPassword": "Quên Mật khẩu?",
+    "useBiometrics": "Dùng {{biometricType}}",
+    "error": {
+      "incorrect": "Mật khẩu không đúng",
+      "failed": "Không thể mở khóa ví",
+      "tooManyAttempts": "Quá nhiều lần thử sai. Vui lòng thử lại sau.",
+      "biometricFailed": "Xác thực sinh trắc học thất bại"
+    }
+  },
+  "biometrics": {
+    "faceId": "Face ID",
+    "touchId": "Touch ID",
+    "fingerprint": "Vân tay",
+    "enable": {
+      "title": "Bật Xác thực Sinh trắc học",
+      "message": "Bạn có muốn sử dụng {{biometricType}} để mở khóa ví?",
+      "confirm": "Bật",
+      "skip": "Bỏ qua"
+    },
+    "prompt": {
+      "title": "Xác thực",
+      "message": "Vui lòng xác thực để tiếp tục",
+      "cancel": "Hủy"
+    }
+  },
+  "home": {
+    "title": "Trang chủ",
+    "balance": "Số dư",
+    "totalValue": "Tổng giá trị",
+    "actions": {
+      "send": "Gửi",
+      "receive": "Nhận",
+      "swap": "Hoán đổi",
+      "bridge": "Cầu nối"
+    },
+    "tokens": {
+      "title": "Token",
+      "empty": "Không tìm thấy token"
+    }
+  },
+  "settings": {
+    "title": "Cài đặt",
+    "sections": {
+      "general": "Chung",
+      "security": "Bảo mật",
+      "about": "Thông tin"
+    },
+    "language": {
+      "title": "Ngôn ngữ",
+      "subtitle": "Chọn ngôn ngữ ưa thích"
+    },
+    "theme": {
+      "title": "Giao diện",
+      "subtitle": "Chọn giao diện ưa thích",
+      "light": "Sáng",
+      "dark": "Tối",
+      "auto": "Tự động (Hệ thống)"
+    },
+    "biometrics": {
+      "title": "Xác thực Sinh trắc học",
+      "subtitle": "Dùng {{biometricType}} để mở khóa",
+      "enabled": "Đã bật",
+      "disabled": "Đã tắt"
+    },
+    "password": {
+      "change": "Đổi Mật khẩu",
+      "subtitle": "Cập nhật mật khẩu ví"
+    },
+    "about": {
+      "version": "Phiên bản {{version}}",
+      "terms": "Điều khoản Dịch vụ",
+      "privacy": "Chính sách Bảo mật"
+    }
+  },
+  "wallet": {
+    "create": {
+      "success": {
+        "title": "Tạo Ví Thành công",
+        "subtitle": "Ví của bạn đã sẵn sàng sử dụng",
+        "button": "Bắt đầu"
+      },
+      "error": {
+        "title": "Tạo Ví Thất bại",
+        "message": "Đã xảy ra lỗi khi tạo ví. Vui lòng thử lại."
+      }
+    },
+    "import": {
+      "title": "Nhập Ví",
+      "subtitle": "Nhập cụm từ khôi phục",
+      "placeholder": "Nhập cụm từ khôi phục 12 hoặc 24 từ",
+      "error": {
+        "invalid": "Cụm từ khôi phục không hợp lệ",
+        "failed": "Nhập ví thất bại"
+      }
+    }
+  },
+  "errors": {
+    "generic": {
+      "title": "Lỗi",
+      "message": "Đã có lỗi xảy ra. Vui lòng thử lại.",
+      "retry": "Thử lại"
+    },
+    "network": {
+      "title": "Lỗi Mạng",
+      "message": "Không thể kết nối. Vui lòng kiểm tra kết nối internet.",
+      "offline": "Bạn đang ngoại tuyến"
+    },
+    "validation": {
+      "required": "Trường này là bắt buộc",
+      "invalid": "Giá trị không hợp lệ",
+      "tooShort": "Giá trị quá ngắn",
+      "tooLong": "Giá trị quá dài"
+    }
+  },
+  "account": {
+    "management": {
+      "title": "Tài Khoản Của Tôi",
+      "addAccount": "Thêm Tài Khoản",
+      "hdWalletAccounts": "Tài Khoản HD Wallet",
+      "importedAccounts": "Tài Khoản Đã Nhập",
+      "account": "Tài Khoản",
+      "imported": "Đã Nhập",
+      "addAccountOptions": {
+        "title": "Thêm Tài Khoản",
+        "createNewAccount": {
+          "title": "Tạo Tài Khoản Mới",
+          "description": "Tạo tài khoản mới từ cụm từ khôi phục của bạn"
+        },
+        "importSeedPhrase": {
+          "title": "Nhập Cụm Từ Khôi Phục",
+          "description": "Nhập bằng cụm từ khôi phục 12 hoặc 24 từ"
+        },
+        "importPrivateKey": {
+          "title": "Nhập Khóa Riêng",
+          "description": "Nhập tài khoản bằng khóa riêng"
+        }
+      }
+    }
+  }
+}

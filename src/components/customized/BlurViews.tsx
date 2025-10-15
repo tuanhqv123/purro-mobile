@@ -15,7 +15,7 @@ export function BackgroundSecureBlurView() {
   return (
     <BlurView
       style={StyleSheet.absoluteFill}
-      blurType="light"
+      blurType="dark"
       blurAmount={10}
       reducedTransparencyFallbackColor="#161616">
       {/* Background blur when app goes to background on iOS */}
@@ -31,7 +31,7 @@ export function SafeTipModalBlurView() {
   return (
     <BlurView
       style={StyleSheet.absoluteFill}
-      blurType="light"
+      blurType="dark"
       blurAmount={10}
       reducedTransparencyFallbackColor="#161616">
       {/* Modal with blur background */}

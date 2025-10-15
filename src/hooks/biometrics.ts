@@ -1,18 +1,11 @@
-/**
- * Biometrics hooks for Face ID / Touch ID authentication
- */
-
 import { atom, useAtom, useAtomValue } from 'jotai';
 import { useCallback, useMemo } from 'react';
 import { BIOMETRY_TYPE } from 'react-native-keychain';
-import { Platform } from 'react-native';
 import { apisKeychain } from '@/core/apis';
 import {
   KEYCHAIN_AUTH_TYPES,
   isAuthenticatedByBiometrics,
 } from '@/core/services/keychain';
-
-const IS_IOS = Platform.OS === 'ios';
 
 // Biometrics state atom
 const biometricsInfoAtom = atom({
@@ -29,32 +22,28 @@ biometricsInfoAtom.onMount = setter => {
     });
 };
 
-/**
- * Computed biometrics information
- */
 export function useBiometricsComputed() {
   const biometrics = useAtomValue(biometricsInfoAtom);
 
   const computed = useMemo(() => {
     const { authEnabled, supportedBiometryType } = biometrics;
 
-    // Force enable for testing if on iOS (even if getSupportedBiometryType returns null)
-    const forceEnable = IS_IOS && !supportedBiometryType;
-    const effectiveSupported =
-      supportedBiometryType || (forceEnable ? BIOMETRY_TYPE.FACE_ID : null);
-    const isFaceID =
-      effectiveSupported === BIOMETRY_TYPE.FACE_ID || forceEnable;
+    const isFaceID = supportedBiometryType === BIOMETRY_TYPE.FACE_ID;
+    const isTouchID = supportedBiometryType === BIOMETRY_TYPE.TOUCH_ID;
+    const isFingerprint = supportedBiometryType === BIOMETRY_TYPE.FINGERPRINT;
 
     return {
-      isBiometricsEnabled: authEnabled && !!effectiveSupported,
+      isBiometricsEnabled: authEnabled && !!supportedBiometryType,
       settingsAuthEnabled: authEnabled,
-      couldSetupBiometrics: !!effectiveSupported,
-      supportedBiometryType: effectiveSupported,
+      couldSetupBiometrics: !!supportedBiometryType,
+      supportedBiometryType,
       defaultTypeLabel: isFaceID
         ? 'Face ID'
-        : IS_IOS
+        : isTouchID
         ? 'Touch ID'
-        : 'Fingerprint',
+        : isFingerprint
+        ? 'Fingerprint'
+        : 'Biometric',
       isFaceID,
     };
   }, [biometrics]);
@@ -62,9 +51,6 @@ export function useBiometricsComputed() {
   return computed;
 }
 
-/**
- * Main biometrics hook with full functionality
- */
 export function useBiometrics(_options?: { autoFetch?: boolean }) {
   const [biometrics, setBiometrics] = useAtom(biometricsInfoAtom);
 
@@ -73,18 +59,11 @@ export function useBiometrics(_options?: { autoFetch?: boolean }) {
       let supportedType = null as null | BIOMETRY_TYPE;
       try {
         supportedType = await apisKeychain.getSupportedBiometryType();
-        console.log('🔐 Supported biometry type:', supportedType);
       } catch (error) {
         console.error('❌ Error getting supported biometry type:', error);
       }
 
       const authEnabled = supportedType ? isAuthenticatedByBiometrics() : false;
-      console.log(
-        '🔐 Auth enabled:',
-        authEnabled,
-        'Supported type:',
-        supportedType,
-      );
 
       setBiometrics(prev => ({
         ...prev,
@@ -136,9 +115,6 @@ export function useBiometrics(_options?: { autoFetch?: boolean }) {
   };
 }
 
-/**
- * Hook for verifying with biometrics
- */
 export function useVerifyByBiometrics() {
   const { computed } = useBiometrics();
 

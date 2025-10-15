@@ -10,12 +10,14 @@ import {
   Image,
   ActivityIndicator,
 } from 'react-native';
-import { apisWallet } from '@/core/apis/wallet';
-import { Colors } from '@/constants/colors';
-import { Typography } from '@/constants/typography';
+import { apisAccount, AccountInfo } from '@/core/apis';
+import { useTheme, Typography, Spacing, BorderRadius } from '@/theme';
 import type { HomeScreenProps } from '@/types/navigation';
 import { useMarketTokens } from '@/hooks/market/useMarketTokens';
+import { MarketTokenItem } from '@/types/market';
 import { formatPriceUSD, formatChangePercent } from '@/utils/number';
+import { formatAddress } from '@/utils/address';
+import { AccountManagementBottomSheet } from '@/components/AddressManagement';
 import AppIcon from '@/assets/icons/purro-icon-dark.png';
 import SendIcon from '@/assets/icons/home/send-cc.svg';
 import ReceiveIcon from '@/assets/icons/home/receive-cc.svg';
@@ -23,12 +25,13 @@ import SwapIcon from '@/assets/icons/home/swap-cc.svg';
 import BridgeIcon from '@/assets/icons/home/bridge-cc.svg';
 import SettingsIcon from '@/assets/icons/home/header-settings-cc.svg';
 
-/**
- * HomeScreen - Main wallet screen following Figma design
- * Shows account balance, action buttons, and account management
- */
 const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
-  const [_currentAccount, setCurrentAccount] = useState<any>(null);
+  const { theme } = useTheme();
+  const styles = createStyles(theme);
+  const [currentAccount, setCurrentAccount] = useState<AccountInfo | null>(
+    null,
+  );
+  const [showAccountManagement, setShowAccountManagement] = useState(false);
   const { tokens, loading, error } = useMarketTokens();
 
   useEffect(() => {
@@ -37,37 +40,82 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
 
   const loadWalletData = async () => {
     try {
-      const accounts = apisWallet.getAllAccounts();
+      const accounts = await apisAccount.getAllAccounts();
       if (accounts && accounts.length > 0) {
-        setCurrentAccount({
-          address: accounts[0],
-          name: 'Account 1',
-        });
+        setCurrentAccount(accounts[0]);
       }
+    } catch (err) {}
+  };
+
+  const handleSelectAccount = (account: AccountInfo) => {
+    setCurrentAccount(account);
+  };
+
+  // handleAddAccount is no longer needed as AccountManagementSheet handles this internally
+
+  const handleCreateNewAccount = async () => {
+    try {
+      if (!currentAccount || currentAccount.type !== 'HD Key Tree') {
+        Alert.alert('Error', 'Please select an HD wallet account first');
+        return;
+      }
+
+      const keyringIndex = currentAccount.keyringIndex ?? 0;
+      const nextIndex =
+        currentAccount.index !== undefined ? currentAccount.index + 1 : 1;
+
+      const newAddress = await apisAccount.addAccountFromHD(
+        keyringIndex,
+        nextIndex,
+      );
+
+      await loadWalletData();
+      Alert.alert(
+        'Success',
+        `Account ${nextIndex + 1} created: ${newAddress.slice(0, 10)}...`,
+      );
     } catch (err) {
-      console.error('Error loading wallet data:', err);
+      Alert.alert(
+        'Error',
+        err instanceof Error ? err.message : 'Failed to create account',
+      );
     }
+  };
+
+  const handleImportSeedPhrase = () => {
+    navigation.navigate('Import' as any);
+  };
+
+  const handleImportPrivateKey = () => {
+    navigation.navigate('ImportPrivateKey');
   };
 
   const handleSettings = () => {
     navigation.navigate('Settings');
   };
 
-  // address helpers kept for future use when address is displayed on Home
-
   const renderHeader = () => (
     <>
-      {/* Header */}
       <View style={styles.header}>
-        <View style={styles.headerLeft}>
+        <TouchableOpacity
+          style={styles.headerLeft}
+          onPress={() => setShowAccountManagement(true)}
+        >
           <Image source={AppIcon} style={styles.logoAvatar} />
-          <Text style={styles.headerTitle}>Purro Wallet</Text>
-        </View>
+          <View>
+            <Text style={styles.headerTitle}>Purro Wallet</Text>
+            {currentAccount && (
+              <Text style={styles.addressText}>
+                {formatAddress(currentAccount.address)}
+              </Text>
+            )}
+          </View>
+        </TouchableOpacity>
         <TouchableOpacity
           style={styles.settingsButton}
           onPress={handleSettings}
         >
-          <SettingsIcon width={24} height={24} color={Colors.brand.primary} />
+          <SettingsIcon width={24} height={24} color={theme.primary[400]} />
         </TouchableOpacity>
       </View>
 
@@ -82,28 +130,28 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
           style={styles.actionSquare}
           onPress={() => Alert.alert('Send', 'Coming soon')}
         >
-          <SendIcon width={28} height={28} color={Colors.brand.primary} />
+          <SendIcon width={28} height={28} color={theme.primary[400]} />
           <Text style={styles.actionSquareText}>Send</Text>
         </TouchableOpacity>
         <TouchableOpacity
           style={styles.actionSquare}
           onPress={() => Alert.alert('Receive', 'Coming soon')}
         >
-          <ReceiveIcon width={28} height={28} color={Colors.brand.primary} />
+          <ReceiveIcon width={28} height={28} color={theme.primary[400]} />
           <Text style={styles.actionSquareText}>Receive</Text>
         </TouchableOpacity>
         <TouchableOpacity
           style={styles.actionSquare}
           onPress={() => Alert.alert('Swap', 'Coming soon')}
         >
-          <SwapIcon width={28} height={28} color={Colors.brand.primary} />
+          <SwapIcon width={28} height={28} color={theme.primary[400]} />
           <Text style={styles.actionSquareText}>Swap</Text>
         </TouchableOpacity>
         <TouchableOpacity
           style={styles.actionSquare}
           onPress={() => Alert.alert('Bridge', 'Coming soon')}
         >
-          <BridgeIcon width={28} height={28} color={Colors.brand.primary} />
+          <BridgeIcon width={28} height={28} color={theme.primary[400]} />
           <Text style={styles.actionSquareText}>Bridge</Text>
         </TouchableOpacity>
       </View>
@@ -115,18 +163,17 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
     </>
   );
 
-  const renderAssetItem = ({ item }: { item: any }) => (
-    <View style={styles.assetRow}>
-      {item.logo ? (
-        <Image source={{ uri: item.logo }} style={styles.assetLogo} />
-      ) : (
-        <View style={styles.assetLogoPlaceholder} />
-      )}
-      <View style={styles.assetMeta}>
+  const renderAssetItem = ({ item }: { item: MarketTokenItem }) => (
+    <View style={styles.assetCard}>
+      <View style={styles.assetCardHeader}>
+        {item.logo ? (
+          <Image source={{ uri: item.logo }} style={styles.assetLogo} />
+        ) : (
+          <View style={styles.assetLogoPlaceholder} />
+        )}
         <Text style={styles.assetSymbol}>{item.symbol}</Text>
-        <Text style={styles.assetName}>{item.name}</Text>
       </View>
-      <View style={styles.assetPrice}>
+      <View style={styles.assetCardBody}>
         <Text style={styles.assetPriceText}>
           {formatPriceUSD(item.priceUsd, { digits: 4 })}
         </Text>
@@ -134,8 +181,8 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
           style={[
             styles.assetChangeText,
             item.change24h !== null && item.change24h >= 0
-              ? { color: Colors.system.success }
-              : { color: Colors.system.error },
+              ? { color: theme.success[400] }
+              : { color: theme.danger[400] },
           ]}
         >
           {formatChangePercent(item.change24h)}
@@ -163,7 +210,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
 
   const renderLoadingState = () => (
     <View style={styles.loadingContainerInline}>
-      <ActivityIndicator size="small" color={Colors.brand.primary} />
+      <ActivityIndicator size="small" color={theme.primary[400]} />
     </View>
   );
 
@@ -186,193 +233,191 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
         </View>
       ) : (
         <FlatList
+          key="assets-grid-2-columns"
           data={tokens}
           keyExtractor={item => item.id}
           renderItem={renderAssetItem}
           ListHeaderComponent={renderHeader}
           contentContainerStyle={styles.flatListContent}
           showsVerticalScrollIndicator={false}
+          numColumns={2}
+          columnWrapperStyle={styles.columnWrapper}
         />
       )}
+
+      <AccountManagementBottomSheet
+        visible={showAccountManagement}
+        onClose={() => setShowAccountManagement(false)}
+        currentAddress={currentAccount?.address}
+        onSelectAccount={handleSelectAccount}
+        onCreateNewAccount={handleCreateNewAccount}
+        onImportSeedPhrase={handleImportSeedPhrase}
+        onImportPrivateKey={handleImportPrivateKey}
+      />
     </SafeAreaView>
   );
 };
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: Colors.background.primary,
-  },
-  flatListContent: {
-    paddingHorizontal: 20,
-    paddingBottom: 40,
-  },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingVertical: 20,
-  },
-  headerLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-  },
-  logoPlaceholder: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: Colors.brand.primary,
-  },
-  logoAvatar: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    borderWidth: 1,
-    borderColor: Colors.brand.primary,
-  },
-  headerTitle: {
-    ...Typography.styles.h4,
-    fontSize: 20,
-    color: Colors.text.primary,
-  },
-  settingsButton: {
-    width: 40,
-    height: 40,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  settingsIcon: {
-    width: 24,
-    height: 24,
-    backgroundColor: Colors.text.secondary,
-    borderRadius: 12,
-  },
-  balanceCenteredArea: {
-    alignItems: 'center',
-    paddingVertical: 16,
-  },
-  balanceAmount: {
-    fontSize: 48,
-    fontWeight: '700',
-    color: Colors.text.primary,
-    marginBottom: 4,
-    textAlign: 'center',
-  },
-  balanceUsd: {
-    ...Typography.styles.body,
-    color: Colors.text.secondary,
-    textAlign: 'center',
-  },
-  actionsRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    gap: 8,
-    marginBottom: 24,
-  },
-  actionSquare: {
-    flex: 1,
-    backgroundColor: Colors.background.secondary,
-    borderRadius: 12,
-    paddingVertical: 12,
-    alignItems: 'center',
-    gap: 8,
-  },
-  actionSquareIcon: {
-    width: 28,
-    height: 28,
-    backgroundColor: Colors.brand.primary,
-    borderRadius: 6,
-  },
-  actionSquareText: {
-    ...Typography.styles.label,
-    color: Colors.brand.primary,
-  },
-  sectionHeader: {
-    marginBottom: 16,
-  },
-  sectionTitle: {
-    ...Typography.styles.body,
-    fontSize: 20,
-    fontWeight: '600',
-    color: Colors.text.primary,
-  },
-  emptyState: {
-    backgroundColor: Colors.background.secondary,
-    borderRadius: 16,
-    padding: 40,
-    alignItems: 'center',
-    gap: 12,
-  },
-  emptyIcon: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
-    backgroundColor: 'rgba(106, 114, 130, 0.2)',
-    marginBottom: 8,
-  },
-  emptyTitle: {
-    ...Typography.styles.body,
-    fontSize: 16,
-    fontWeight: '600',
-    color: Colors.text.primary,
-  },
-  emptyDescription: {
-    ...Typography.styles.label,
-    color: Colors.text.secondary,
-    textAlign: 'center',
-  },
-  loadingContainerInline: {
-    paddingVertical: 24,
-    alignItems: 'center',
-  },
-  assetRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 12,
-    paddingHorizontal: 12,
-    backgroundColor: Colors.background.secondary,
-    borderRadius: 12,
-    marginBottom: 10,
-  },
-  assetLogo: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-  },
-  assetLogoPlaceholder: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: 'rgba(106,114,130,0.12)',
-  },
-  assetMeta: {
-    marginLeft: 12,
-    flex: 1,
-  },
-  assetSymbol: {
-    ...Typography.styles.body,
-    fontWeight: '600',
-    color: Colors.text.primary,
-  },
-  assetName: {
-    ...Typography.styles.label,
-    color: Colors.text.secondary,
-    fontSize: 12,
-  },
-  assetPrice: {
-    marginLeft: 12,
-    alignItems: 'flex-end',
-  },
-  assetPriceText: {
-    ...Typography.styles.body,
-    color: Colors.text.primary,
-    fontWeight: '600',
-  },
-  assetChangeText: {
-    ...Typography.styles.caption,
-    marginTop: 4,
-  },
-});
+const createStyles = (theme: ReturnType<typeof useTheme>['theme']) =>
+  StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: theme.background.primary,
+    },
+    flatListContent: {
+      paddingHorizontal: Spacing.lg,
+      paddingBottom: Spacing.xxl,
+    },
+    columnWrapper: {
+      gap: Spacing.sm + 2,
+      marginBottom: Spacing.sm + 2,
+    },
+    header: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      paddingVertical: Spacing.lg,
+    },
+    headerLeft: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: Spacing.md - 4,
+    },
+    logoAvatar: {
+      width: 40,
+      height: 40,
+      borderRadius: 24,
+      borderWidth: 1,
+      borderColor: theme.primary[400],
+    },
+    headerTitle: {
+      ...Typography.h4,
+      fontSize: 20,
+      color: theme.text.primary,
+    },
+    addressText: {
+      ...Typography.label14,
+      fontSize: 12,
+      color: theme.text.secondary,
+    },
+    settingsButton: {
+      width: 40,
+      height: 40,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    balanceCenteredArea: {
+      alignItems: 'center',
+      paddingVertical: Spacing.md,
+    },
+    balanceAmount: {
+      fontSize: 48,
+      fontWeight: '700',
+      color: theme.text.primary,
+      marginBottom: 4,
+      textAlign: 'center',
+    },
+    actionsRow: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      gap: Spacing.sm,
+      marginBottom: Spacing.lg,
+    },
+    actionSquare: {
+      flex: 1,
+      backgroundColor: theme.background.secondary,
+      borderRadius: BorderRadius.md,
+      paddingVertical: Spacing.md - 4,
+      alignItems: 'center',
+      gap: Spacing.sm,
+    },
+    actionSquareText: {
+      ...Typography.label14,
+      color: theme.primary[400],
+    },
+    sectionHeader: {
+      marginBottom: Spacing.md,
+    },
+    sectionTitle: {
+      ...Typography.body,
+      fontSize: 20,
+      fontWeight: '600',
+      color: theme.text.primary,
+    },
+    emptyState: {
+      backgroundColor: theme.background.secondary,
+      borderRadius: BorderRadius.md,
+      padding: Spacing.xxl,
+      alignItems: 'center',
+      gap: Spacing.md - 4,
+    },
+    emptyIcon: {
+      width: 64,
+      height: 64,
+      borderRadius: 32,
+      backgroundColor: 'rgba(106, 114, 130, 0.2)',
+      marginBottom: Spacing.sm,
+    },
+    emptyTitle: {
+      ...Typography.body,
+      fontSize: 16,
+      fontWeight: '600',
+      color: theme.text.primary,
+    },
+    emptyDescription: {
+      ...Typography.label14,
+      color: theme.text.secondary,
+      textAlign: 'center',
+    },
+    loadingContainerInline: {
+      paddingVertical: Spacing.lg,
+      alignItems: 'center',
+    },
+    assetCard: {
+      flex: 1,
+      backgroundColor: theme.surface.primary,
+      borderRadius: Spacing.sm + 2,
+      paddingHorizontal: Spacing.md,
+      paddingVertical: Spacing.md,
+      minHeight: 100,
+      gap: Spacing.md - 2,
+    },
+    assetCardHeader: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: Spacing.sm + 2,
+    },
+    assetLogo: {
+      width: 32,
+      height: 32,
+      borderRadius: 16,
+    },
+    assetLogoPlaceholder: {
+      width: 32,
+      height: 32,
+      borderRadius: 16,
+      backgroundColor: 'rgba(106,114,130,0.12)',
+    },
+    assetSymbol: {
+      ...Typography.label16,
+      color: theme.text.primary,
+      fontWeight: '600',
+    },
+    assetCardBody: {
+      flex: 1,
+      justifyContent: 'flex-end',
+      gap: 4,
+    },
+    assetPriceText: {
+      ...Typography.body,
+      color: theme.text.primary,
+      fontWeight: '600',
+      fontSize: 16,
+    },
+    assetChangeText: {
+      ...Typography.label14,
+      fontSize: 12,
+    },
+  });
 
 export default HomeScreen;

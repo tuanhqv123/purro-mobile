@@ -6,16 +6,14 @@ import {
   SafeAreaView,
   TouchableOpacity,
 } from 'react-native';
+import { useTheme, Typography, Spacing, BorderRadius } from '@/theme';
 import type { WalletSuccessScreenProps } from '@/types/navigation';
 
-/**
- * Wallet Success Screen
- * Shown after successful wallet creation
- * Following Figma design: node-id=260-1901
- */
 const WalletSuccessScreen: React.FC<WalletSuccessScreenProps> = ({
   navigation,
 }) => {
+  const { theme } = useTheme();
+  const styles = createStyles(theme);
   const handleGetStarted = () => {
     // Navigate to Home screen
     navigation.reset({
@@ -56,75 +54,67 @@ const WalletSuccessScreen: React.FC<WalletSuccessScreenProps> = ({
   );
 };
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#161616',
-  },
-  content: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingHorizontal: 20,
-    gap: 32,
-  },
-  iconContainer: {
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  checkmarkCircle: {
-    width: 120,
-    height: 120,
-    borderRadius: 999,
-    backgroundColor: '#25272C',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  checkmark: {
-    fontSize: 48,
-    color: '#18C477',
-    fontWeight: '600',
-  },
-  messageContainer: {
-    gap: 16,
-    alignItems: 'center',
-  },
-  title: {
-    fontFamily: 'Figtree',
-    fontWeight: '600',
-    fontSize: 32,
-    lineHeight: 35.2,
-    textAlign: 'center',
-    color: '#F9F9F9',
-  },
-  subtitle: {
-    fontFamily: 'Figtree',
-    fontWeight: '500',
-    fontSize: 18,
-    lineHeight: 25.2,
-    textAlign: 'center',
-    color: '#6A7282',
-  },
-  button: {
-    position: 'absolute',
-    bottom: 40,
-    left: 20,
-    right: 20,
-    height: 56,
-    backgroundColor: '#059288',
-    borderRadius: 12,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingHorizontal: 24,
-    paddingVertical: 18,
-  },
-  buttonText: {
-    fontFamily: 'Figtree',
-    fontWeight: '500',
-    fontSize: 18,
-    lineHeight: 25.2,
-    color: '#F9F9F9',
-  },
-});
+const createStyles = (theme: ReturnType<typeof useTheme>['theme']) =>
+  StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: theme.background.primary,
+    },
+    content: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+      paddingHorizontal: Spacing.lg,
+      gap: Spacing.xl,
+    },
+    iconContainer: {
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    checkmarkCircle: {
+      width: 120,
+      height: 120,
+      borderRadius: BorderRadius.full,
+      backgroundColor: theme.background.secondary,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    checkmark: {
+      fontSize: 48,
+      color: theme.success[400],
+      fontWeight: '600',
+    },
+    messageContainer: {
+      gap: Spacing.md,
+      alignItems: 'center',
+    },
+    title: {
+      ...Typography.h4,
+      textAlign: 'center',
+      color: theme.text.primary,
+    },
+    subtitle: {
+      ...Typography.button,
+      textAlign: 'center',
+      color: theme.text.secondary,
+    },
+    button: {
+      position: 'absolute',
+      bottom: Spacing.xxl,
+      left: Spacing.lg,
+      right: Spacing.lg,
+      height: 56,
+      backgroundColor: theme.primary[400],
+      borderRadius: BorderRadius.md,
+      justifyContent: 'center',
+      alignItems: 'center',
+      paddingHorizontal: Spacing.lg,
+      paddingVertical: Spacing.md + 2,
+    },
+    buttonText: {
+      ...Typography.button,
+      color: theme.text.primary,
+    },
+  });
 
 export default WalletSuccessScreen;

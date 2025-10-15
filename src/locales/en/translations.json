@@ -1,0 +1,291 @@
+{
+  "common": {
+    "ok": "OK",
+    "cancel": "Cancel",
+    "continue": "Continue",
+    "back": "Back",
+    "next": "Next",
+    "confirm": "Confirm",
+    "delete": "Delete",
+    "save": "Save",
+    "edit": "Edit",
+    "close": "Close",
+    "done": "Done",
+    "skip": "Skip",
+    "retry": "Retry",
+    "enable": "Enable",
+    "disable": "Disable",
+    "success": "Success",
+    "error": "Error",
+    "warning": "Warning",
+    "info": "Info"
+  },
+  "welcome": {
+    "title": "Welcome to Purro Wallet",
+    "subtitle": "Your Gateway to Hyperliquid",
+    "createWallet": "Create Wallet",
+    "importWallet": "Import Wallet",
+    "termsText": "I accept the Terms of Service and Privacy Policy",
+    "termsRequired": {
+      "title": "Terms Required",
+      "message": "Please accept the Terms of Service and Privacy Policy to continue."
+    }
+  },
+  "seedPhrase": {
+    "display": {
+      "title": "Your Seed Phrase",
+      "subtitle": "Save your seed phrase securely",
+      "confirmation": "I've saved my seed phrase",
+      "warning": "Store your seed phrase in a safe & offline place, never share it with anyone. This is the only way to recover your wallet.",
+      "securityNotice": {
+        "title": "Security Notice",
+        "message": "Screenshots are disabled for your security. Please write down your seed phrase on paper and store it safely."
+      }
+    },
+    "verify": {
+      "title": "Verify seed phrase",
+      "subtitle": "Enter the correct words to verify",
+      "wordLabel": "Word #{{number}}",
+      "placeholder": "Enter word",
+      "error": {
+        "incorrect": "Incorrect word. Please try again.",
+        "empty": "Please enter all words."
+      }
+    }
+  },
+  "password": {
+    "create": {
+      "title": "Create Password",
+      "subtitle": "Secure your wallet with a password",
+      "passwordLabel": "Password",
+      "confirmLabel": "Confirm Password",
+      "passwordPlaceholder": "Enter password",
+      "confirmPlaceholder": "Re-enter password",
+      "requirement": "At least 8 characters",
+      "enableBiometrics": "Enable biometric authentication",
+      "validation": {
+        "tooShort": "Password must be at least 8 characters",
+        "mismatch": "Passwords do not match",
+        "empty": "Password cannot be empty"
+      }
+    }
+  },
+  "unlock": {
+    "title": "Unlock",
+    "subtitle": "Enter your password",
+    "passwordLabel": "Password",
+    "passwordPlaceholder": "Enter password",
+    "unlockButton": "Unlock",
+    "forgotPassword": "Forgot Password?",
+    "useBiometrics": "Use {{biometricType}}",
+    "error": {
+      "incorrect": "Incorrect password",
+      "failed": "Failed to unlock wallet",
+      "tooManyAttempts": "Too many failed attempts. Please try again later.",
+      "biometricFailed": "Biometric authentication failed"
+    }
+  },
+  "biometrics": {
+    "faceId": "Face ID",
+    "touchId": "Touch ID",
+    "fingerprint": "Fingerprint",
+    "enable": {
+      "title": "Enable Biometric Authentication",
+      "message": "Would you like to use {{biometricType}} to unlock your wallet?",
+      "confirm": "Enable",
+      "skip": "Skip"
+    },
+    "prompt": {
+      "title": "Authenticate",
+      "message": "Please authenticate to continue",
+      "cancel": "Cancel"
+    }
+  },
+  "home": {
+    "title": "Home",
+    "balance": "Balance",
+    "totalValue": "Total Value",
+    "actions": {
+      "send": "Send",
+      "receive": "Receive",
+      "swap": "Swap",
+      "bridge": "Bridge"
+    },
+    "tokens": {
+      "title": "Tokens",
+      "empty": "No tokens found"
+    }
+  },
+  "settings": {
+    "title": "Settings",
+    "sections": {
+      "general": "General",
+      "security": "Security",
+      "about": "About"
+    },
+    "language": {
+      "title": "Language",
+      "subtitle": "Choose your preferred language"
+    },
+    "theme": {
+      "title": "Theme",
+      "subtitle": "Choose your theme preference",
+      "light": "Light",
+      "dark": "Dark",
+      "auto": "Auto (System)"
+    },
+    "biometrics": {
+      "title": "Biometric Authentication",
+      "subtitle": "Use {{biometricType}} to unlock",
+      "enabled": "Enabled",
+      "disabled": "Disabled"
+    },
+    "password": {
+      "change": "Change Password",
+      "subtitle": "Update your wallet password"
+    },
+    "about": {
+      "version": "Version {{version}}",
+      "terms": "Terms of Service",
+      "privacy": "Privacy Policy"
+    }
+  },
+  "wallet": {
+    "create": {
+      "success": {
+        "title": "Wallet Created Successfully",
+        "subtitle": "Your wallet is ready to use",
+        "button": "Get Started"
+      },
+      "error": {
+        "title": "Failed to Create Wallet",
+        "message": "An error occurred while creating your wallet. Please try again."
+      }
+    }
+  },
+  "import": {
+    "methods": {
+      "title": "Import Wallet",
+      "subtitle": "Choose how to import your wallet",
+      "seedPhrase": {
+        "title": "Recovery Phrase",
+        "description": "Import using 12 or 24 words"
+      },
+      "privateKey": {
+        "title": "Private Key",
+        "description": "Import using your private key"
+      }
+    },
+    "seedPhrase": {
+      "title": "Import Recovery Phrase",
+      "subtitle": "Enter your 12 or 24 word recovery phrase",
+      "placeholder": "Enter your recovery phrase separated by spaces",
+      "pasteButton": "Paste",
+      "helpButton": "What is a recovery phrase?",
+      "helpTitle": "Recovery Phrase",
+      "helpText": "A recovery phrase (also called seed phrase) is a series of 12 or 24 words that acts as a master key to your wallet. Anyone with your recovery phrase can access your wallet, so keep it safe and never share it.",
+      "validation": {
+        "empty": "Please enter your recovery phrase",
+        "invalidWordCount": "Recovery phrase must be 12 or 24 words",
+        "invalidWord": "Invalid word found: {{words}}",
+        "invalidWords": "Invalid words found: {{words}}",
+        "duplicate": "This wallet has already been imported"
+      }
+    },
+    "privateKey": {
+      "title": "Import Private Key",
+      "subtitle": "Enter your private key to import your wallet",
+      "placeholder": "Enter your private key (with or without 0x prefix)",
+      "pasteButton": "Paste",
+      "confirmButton": "Confirm",
+      "security": "Your private key is encrypted and stored only on your device",
+      "info": {
+        "title": "What is a Private Key?",
+        "description": "A private key is a 64-character hexadecimal string that gives complete control over your wallet. Keep it secret and never share it with anyone."
+      },
+      "validation": {
+        "empty": "Please enter your private key",
+        "invalidLength": "Private key must be 64 hexadecimal characters",
+        "invalidFormat": "Private key contains invalid characters (must be 0-9, a-f, A-F)",
+        "duplicate": "This wallet has already been imported"
+      }
+    },
+    "success": {
+      "title": "Wallet Imported Successfully!",
+      "subtitle": "Your wallet is ready to use",
+      "addressLabel": "Address",
+      "button": "Continue"
+    }
+  },
+  "export": {
+    "password": {
+      "title": "Enter Password",
+      "subtitle": "Enter your password to export your recovery phrase",
+      "placeholder": "Enter your password",
+      "button": "Confirm",
+      "error": "Incorrect password. Please try again.",
+      "noMnemonic": "This wallet was imported with a private key and does not have a recovery phrase",
+      "security": "Your recovery phrase will be displayed on the next screen. Make sure no one is watching."
+    },
+    "seedPhrase": {
+      "title": "Your Recovery Phrase",
+      "subtitle": "Write down these words in order and keep them safe",
+      "warning": "Never share your recovery phrase with anyone. Anyone with these words can access your wallet.",
+      "copied": "Copied to clipboard!",
+      "copyButton": "Copy to Clipboard",
+      "button": "Done",
+      "security": {
+        "title": "Keep it safe",
+        "items": [
+          "Write it down on paper",
+          "Store it in a secure location",
+          "Never share it with anyone",
+          "Don't store it digitally"
+        ]
+      }
+    }
+  },
+  "errors": {
+    "generic": {
+      "title": "Error",
+      "message": "Something went wrong. Please try again.",
+      "retry": "Retry"
+    },
+    "network": {
+      "title": "Network Error",
+      "message": "Unable to connect. Please check your internet connection.",
+      "offline": "You are offline"
+    },
+    "validation": {
+      "required": "This field is required",
+      "invalid": "Invalid value",
+      "tooShort": "Value is too short",
+      "tooLong": "Value is too long"
+    }
+  },
+  "account": {
+    "management": {
+      "title": "My Accounts",
+      "addAccount": "Add Account",
+      "hdWalletAccounts": "HD Wallet Accounts",
+      "importedAccounts": "Imported Accounts",
+      "account": "Account",
+      "imported": "Imported",
+      "addAccountOptions": {
+        "title": "Add Account",
+        "createNewAccount": {
+          "title": "Create New Account",
+          "description": "Create a new account from your seed phrase"
+        },
+        "importSeedPhrase": {
+          "title": "Import Seed Phrase",
+          "description": "Import using 12 or 24 words recovery phrase"
+        },
+        "importPrivateKey": {
+          "title": "Import Private Key",
+          "description": "Import an account using a private key"
+        }
+      }
+    }
+  }
+}

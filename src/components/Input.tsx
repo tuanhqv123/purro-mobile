@@ -36,9 +36,6 @@ export interface NextInputProps extends Omit<ViewStyle, 'children'> {
   disableFocusingStyle?: boolean;
 }
 
-/**
- * Base Input component following Rabby's pattern
- */
 export const NextInput = React.forwardRef<TextInput, NextInputProps>(
   (
     {
@@ -165,10 +162,6 @@ export const NextInput = React.forwardRef<TextInput, NextInputProps>(
 
 NextInput.displayName = 'NextInput';
 
-/**
- * Password Input component with toggle visibility
- * Following Rabby's pattern for secure text entry
- */
 export const PasswordInput = React.forwardRef<
   TextInput,
   NextInputProps & {

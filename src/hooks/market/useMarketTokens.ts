@@ -1,13 +1,5 @@
 import { useEffect, useState, useCallback } from 'react';
-
-export interface MarketTokenItem {
-  id: string;
-  symbol: string;
-  name: string;
-  priceUsd: number | null;
-  change24h: number | null; // percent
-  logo?: string | null;
-}
+import { MarketTokenItem, RawTokenData, CoinGeckoToken } from '@/types/market';
 
 const GECKO_TERMINAL = 'https://api.geckoterminal.com/api/v2';
 const COINGECKO = 'https://api.coingecko.com/api/v3';
@@ -27,8 +19,8 @@ async function fetchFromGeckoTerminal(): Promise<MarketTokenItem[]> {
     throw new Error(`GeckoTerminal non-JSON: ${txt.slice(0, 160)}`);
   }
   const json = await resp.json();
-  const results: Array<any> = (json && json.data) || [];
-  const mapped = results.map((item: any) => {
+  const results: Array<RawTokenData> = (json && json.data) || [];
+  const mapped = results.map((item: RawTokenData) => {
     const token =
       item?.attributes?.token ||
       item?.attributes?.base_token ||
@@ -69,7 +61,7 @@ async function fetchFromCoinGecko(): Promise<MarketTokenItem[]> {
     throw new Error(`CoinGecko ${resp.status}: ${text.slice(0, 160)}`);
   }
   const list = await resp.json();
-  return (list || []).map((t: any) => ({
+  return (list || []).map((t: CoinGeckoToken) => ({
     id: String(t.id || t.symbol || Math.random()),
     symbol: String(t.symbol || '').toUpperCase(),
     name: t.name || t.symbol || 'Unknown',
@@ -123,8 +115,8 @@ export function useMarketTokens() {
           );
         }
       }
-    } catch (e: any) {
-      setError(String(e?.message || e));
+    } catch (e: unknown) {
+      setError(String((e as Error)?.message || e));
     } finally {
       setLoading(false);
     }

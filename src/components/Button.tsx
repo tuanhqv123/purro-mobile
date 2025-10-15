@@ -1,11 +1,5 @@
 import React from 'react';
-import {
-  TouchableOpacity,
-  Text,
-  StyleSheet,
-  ViewStyle,
-  TextStyle,
-} from 'react-native';
+import { TouchableOpacity, Text, StyleSheet, ViewStyle } from 'react-native';
 
 interface ButtonProps {
   type?: 'primary' | 'secondary';
@@ -83,4 +77,3 @@ const styles = StyleSheet.create({
     color: '#999999',
   },
 });
-

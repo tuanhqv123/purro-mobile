@@ -1,17 +1,3 @@
-/**
- * Encryptor constants
- * Default password and encryption settings
- */
-
-/**
- * Built-in password for keyring encryption
- * This is used as the default password before user sets their own
- */
-export const RABBY_MOBILE_KR_PWD = 'PURRO_MOBILE_DEFAULT_PWD_2024';
-
-/**
- * Generate a random salt for encryption
- */
 export function generateSalt(): string {
   const array = new Uint8Array(32);
   for (let i = 0; i < array.length; i++) {
@@ -22,9 +8,6 @@ export function generateSalt(): string {
     .join('');
 }
 
-/**
- * Encryption algorithm settings
- */
 export const ENCRYPTION_CONFIG = {
   algorithm: 'aes-256-gcm',
   keyLength: 32,

@@ -8,14 +8,14 @@ import {
   Pressable,
   Alert,
 } from 'react-native';
-import { Colors } from '@/constants/colors';
-import { Typography } from '@/constants/typography';
+import { useTheme, Typography, Spacing, BorderRadius } from '@/theme';
 import { useTranslation } from '@/utils/i18n';
 import { useCreateWallet } from '@/hooks/wallet/useCreateWallet';
 import type { WelcomeScreenProps } from '@/types/navigation';
 
 const WelcomeScreen: React.FC<WelcomeScreenProps> = ({ navigation }) => {
   const { t } = useTranslation();
+  const { theme } = useTheme();
   const [acceptedTerms, setAcceptedTerms] = useState(false);
 
   const { getSeedPhrase } = useCreateWallet();
@@ -52,16 +52,14 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = ({ navigation }) => {
       return;
     }
 
-    Alert.alert(
-      t('welcome.importWallet'),
-      'Import wallet feature coming soon',
-      [{ text: t('common.ok'), style: 'default' }],
-    );
+    navigation.navigate('ImportMethods');
   };
 
   const toggleTermsAcceptance = () => {
     setAcceptedTerms(!acceptedTerms);
   };
+
+  const styles = createStyles(theme);
 
   return (
     <SafeAreaView style={styles.container}>
@@ -117,132 +115,112 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = ({ navigation }) => {
   );
 };
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: Colors.background.primary,
-  },
-  statusBar: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingTop: 20,
-    paddingBottom: 16,
-    height: 56,
-  },
-  statusBarTime: {
-    ...Typography.styles.system,
-    color: Colors.text.primary,
-    textAlign: 'center',
-    flex: 1,
-  },
-  statusBarRight: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 7,
-  },
-  content: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingHorizontal: 20,
-  },
-  logoContainer: {
-    marginBottom: 32,
-  },
-  logoPlaceholder: {
-    width: 120,
-    height: 120,
-    borderRadius: 999,
-    backgroundColor: Colors.background.secondary,
-  },
-  titleSection: {
-    alignItems: 'center',
-    gap: 16,
-  },
-  title: {
-    ...Typography.styles.h4,
-    color: Colors.text.primary,
-    width: 335,
-  },
-  subtitle: {
-    ...Typography.styles.button,
-    color: Colors.text.secondary,
-    textAlign: 'center',
-    width: 335,
-  },
-  bottomSection: {
-    paddingHorizontal: 20,
-    paddingBottom: 20,
-    gap: 20,
-  },
-  termsSection: {
-    alignItems: 'center',
-  },
-  checkboxContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  checkbox: {
-    width: 16,
-    height: 16,
-    borderRadius: 4,
-    borderWidth: 1.25,
-    borderColor: Colors.text.secondary,
-    backgroundColor: 'transparent',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  checkboxChecked: {
-    backgroundColor: Colors.brand.primary,
-    borderColor: Colors.brand.primary,
-  },
-  checkmark: {
-    width: 8,
-    height: 6,
-    borderLeftWidth: 1.5,
-    borderBottomWidth: 1.5,
-    borderColor: Colors.system.white,
-    transform: [{ rotate: '-45deg' }],
-    marginTop: -2,
-    marginLeft: 1,
-  },
-  termsText: {
-    ...Typography.styles.label,
-    color: Colors.text.secondary,
-  },
-  buttonsSection: {
-    gap: 8,
-  },
-  button: {
-    width: '100%',
-    minHeight: 48,
-    borderRadius: 12,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingHorizontal: 24,
-    paddingVertical: 16,
-  },
-  primaryButton: {
-    backgroundColor: Colors.brand.primary,
-  },
-  secondaryButton: {
-    backgroundColor: Colors.background.secondary,
-  },
-  primaryButtonText: {
-    fontSize: 16,
-    fontWeight: '500',
-    color: Colors.text.primary,
-    lineHeight: 20,
-  },
-  secondaryButtonText: {
-    fontSize: 16,
-    fontWeight: '500',
-    color: Colors.button.secondary.text,
-    lineHeight: 20,
-  },
-});
+const createStyles = (theme: ReturnType<typeof useTheme>['theme']) =>
+  StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: theme.background.primary,
+    },
+    content: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+      paddingHorizontal: Spacing.lg,
+    },
+    logoContainer: {
+      marginBottom: Spacing.xl,
+    },
+    logoPlaceholder: {
+      width: 120,
+      height: 120,
+      borderRadius: BorderRadius.full,
+      backgroundColor: theme.background.secondary,
+    },
+    titleSection: {
+      alignItems: 'center',
+      gap: Spacing.md,
+    },
+    title: {
+      ...Typography.h4,
+      color: theme.text.primary,
+      width: 335,
+      textAlign: 'center',
+    },
+    subtitle: {
+      ...Typography.body,
+      color: theme.text.secondary,
+      textAlign: 'center',
+      width: 335,
+    },
+    bottomSection: {
+      paddingHorizontal: Spacing.lg,
+      paddingBottom: Spacing.lg,
+      gap: Spacing.lg,
+    },
+    termsSection: {
+      alignItems: 'center',
+    },
+    checkboxContainer: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: Spacing.sm,
+    },
+    checkbox: {
+      width: 16,
+      height: 16,
+      borderRadius: BorderRadius.xs,
+      borderWidth: 1.25,
+      borderColor: theme.text.secondary,
+      backgroundColor: 'transparent',
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    checkboxChecked: {
+      backgroundColor: theme.button.primary,
+      borderColor: theme.button.primary,
+    },
+    checkmark: {
+      width: 8,
+      height: 6,
+      borderLeftWidth: 1.5,
+      borderBottomWidth: 1.5,
+      borderColor: theme.neutral.white.base,
+      transform: [{ rotate: '-45deg' }],
+      marginTop: -2,
+      marginLeft: 1,
+    },
+    termsText: {
+      ...Typography.label14,
+      color: theme.text.secondary,
+    },
+    buttonsSection: {
+      gap: Spacing.sm,
+    },
+    button: {
+      width: '100%',
+      minHeight: 48,
+      borderRadius: BorderRadius.md,
+      justifyContent: 'center',
+      alignItems: 'center',
+      paddingHorizontal: Spacing.lg,
+      paddingVertical: Spacing.md,
+    },
+    primaryButton: {
+      backgroundColor: theme.button.primary,
+    },
+    secondaryButton: {
+      backgroundColor: theme.button.secondary,
+    },
+    primaryButtonText: {
+      ...Typography.label16,
+      fontWeight: '500',
+      color: theme.button.text.primary,
+    },
+    secondaryButtonText: {
+      ...Typography.label16,
+      fontWeight: '500',
+      color: theme.button.text.secondary,
+    },
+  });
 
 export default WelcomeScreen;
